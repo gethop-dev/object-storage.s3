@@ -17,8 +17,8 @@ This library provides a single Integrant key, `magnet.object-storage/s3`, that e
 Example usage:
 
 ``` edn
- :magnet.aws/s3 {:bucket-name "hydrogen-test"
-                 :presigned-url-lifespan  2.5 }
+ :magnet.object-storage/s3 {:bucket-name "hydrogen-test"
+                            :presigned-url-lifespan  2.5 }
 ```
 Key initialization returns an `AWS3Bucket` record that can be used to perform the following operations:
 
