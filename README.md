@@ -5,7 +5,7 @@ A [Duct](https://github.com/duct-framework/duct) library that provides [Integran
 
 ## Installation
 
-[![Clojars Project](https://clojars.org/magnet/object-storage/latest-version.svg)](https://clojars.org/magnet/object-storage)
+[![Clojars Project](https://clojars.org/magnet/object-storage.s3/latest-version.svg)](https://clojars.org/magnet/object-storage.s3)
 
 ## Usage
 
