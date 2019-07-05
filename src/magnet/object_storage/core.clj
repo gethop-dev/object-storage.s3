@@ -5,7 +5,7 @@
 
 (defprotocol ObjectStorage
   "Abstraction for managing objects storage"
-  (get-object [this obj-id])
-  (get-object-url [this obj-id])
-  (put-object [this obj-id object])
-  (delete-object [this obj-id]))
+  (get-object [this obj-id] [this obj-id opts])
+  (get-object-url [this obj-id] [this obj-id opts])
+  (put-object [this obj-id object] [this obj-id object opts])
+  (delete-object [this obj-id] [this obj-id opts]))
