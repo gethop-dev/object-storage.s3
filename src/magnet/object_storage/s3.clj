@@ -10,7 +10,9 @@
   (:import
    [java.util Date]))
 
-(def ^:const default-presigned-url-lifespan 60)
+(def ^:const default-presigned-url-lifespan
+  "Default presigned urls lifespan, expressed in minutes"
+  60)
 
 (defn generate-presigned-url
   "Generates a url allowing access to the object without the need to auth oneself.
