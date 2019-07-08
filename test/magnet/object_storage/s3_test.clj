@@ -125,7 +125,7 @@
         file-key (str "integration-test-" (UUID/randomUUID))
         file (file test-file-1-path)]
     (testing "testing encrypted file put-get"
-        (core/put-object s3-boundary file-key file {:encryption {:key-pair key-pair}})
+      (core/put-object s3-boundary file-key file {:encryption {:key-pair key-pair}})
       (is (not (=
                 (digest/sha-256 file)
                 (digest/sha-256 (core/get-object s3-boundary file-key)))))
