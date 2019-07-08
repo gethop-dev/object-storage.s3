@@ -18,7 +18,7 @@
            [java.util UUID]
            [magnet.object_storage.s3 AWSS3Bucket]))
 
-(def config {:bucket-name (System/getenv "OBJECT_STORAGE_S3_BUCKET")})
+(def config {:bucket-name (System/getenv "TEST_OBJECT_STORAGE_S3_BUCKET")})
 (def test-file-1-path "test-file-1")
 (def test-file-2-path "test-file-2")
 
