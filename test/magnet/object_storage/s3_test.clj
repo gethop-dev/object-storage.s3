@@ -101,6 +101,11 @@
      "It should be possible to replace an object.")
     (core/delete-object s3-boundary file-key)))
 
+;; This function is just to prevent Eastwood from complaining about 'unused-ret-vals'
+;; It is a known issue: https://github.com/jonase/eastwood/issues/116
+(defn get-content [url]
+  (slurp url))
+
 (deftest ^:integration presigned-url-test
   (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
@@ -113,11 +118,11 @@
         (is (= (digest/sha-256 file)
                (digest/sha-256 (slurp result))))))
     (testing "testing POST presigned url throws exception when using GET"
-      (let [result (core/get-object-url s3-boundary file-key {:method "POST"})]
-        (is (string? result))
-        (is (URL. result))
+      (let [url (core/get-object-url s3-boundary file-key {:method "POST"})]
+        (is (string? url))
+        (is (URL. url))
         (is (thrown? IOException
-                     (slurp result)))))
+                     (get-content url)))))
     (core/delete-object s3-boundary file-key)))
 
 (deftest ^:integration encrypted-put-get-test
