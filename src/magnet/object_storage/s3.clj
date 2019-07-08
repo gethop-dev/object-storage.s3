@@ -68,16 +68,9 @@
     (aws-s3/put-object opts)))
 
 (defn- delete-object*
-  "Delete the object `obj-id` from S3 bucket referenced by `this`, using `opts` options.
-  See
-  https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/DeleteObjectRequest.html
-  for keys that can be used in `opts`"
-  [this obj-id opts]
-  (->
-   (assoc opts
-          :bucket-name (:bucket-name this)
-          :key obj-id)
-   (aws-s3/delete-object)))
+  "Delete the object `obj-id` from S3 bucket referenced by `this`"
+  [this obj-id]
+  (aws-s3/delete-object {:bucket-name (:bucket-name this), :key obj-id}))
 
 (defrecord AWSS3Bucket [bucket-name presigned-url-lifespan]
   core/ObjectStorage
@@ -97,9 +90,7 @@
     (put-object* this obj-id object opts))
 
   (delete-object [this obj-id]
-    (delete-object* this obj-id {}))
-  (delete-object [this obj-id opts]
-    (delete-object* this obj-id opts)))
+    (delete-object* this obj-id)))
 
 (defmethod ig/init-key :magnet.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan]
                                                      :or {presigned-url-lifespan default-presigned-url-lifespan}}]

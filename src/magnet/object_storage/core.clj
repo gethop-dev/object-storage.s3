@@ -8,4 +8,4 @@
   (get-object [this obj-id] [this obj-id opts])
   (get-object-url [this obj-id] [this obj-id opts])
   (put-object [this obj-id object] [this obj-id object opts])
-  (delete-object [this obj-id] [this obj-id opts]))
+  (delete-object [this obj-id]))
