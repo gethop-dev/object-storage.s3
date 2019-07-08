@@ -30,9 +30,9 @@
    .toString))
 
 (defn- get-object*
-  "Get the object `obj-id` from S3 bucket referenced by `this`, using `opts` options.
+  "Get the object with key `obj-id` from S3 bucket referenced by `this`, using `opts` options.
   See
-  https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/AmazonS3Client.html#generatePresignedUrl-java.lang.String-java.lang.String-java.util.Date-com.amazonaws.HttpMethod-
+  https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/GetObjectRequest.html
   for keys that can be used in `opts`"
   [this obj-id opts]
   (->
