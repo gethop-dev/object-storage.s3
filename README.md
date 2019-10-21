@@ -102,7 +102,7 @@ user> (core/put-object s3-record "/test/foo.png"
 ```clj
 user> (require '[clojure.java.io :refer [input-stream]])
 user> (core/put-object s3-record "test.txt" nil {:input-stream (input-stream (.getBytes "Test"))
-                                                 :metadata {:content-length (.length "Test}})
+                                                 :metadata {:content-length (count (.getBytes "Test))}})
 {:metadata {:content-disposition nil, :expiration-time-rule-id nil, :user-metadata nil, 
 :instance-length 0, :version-id nil, :server-side-encryption nil,
 :server-side-encryption-aws-kms-key-id nil, :etag "0cbc6611f5540bd0809a388dc95a615b",
