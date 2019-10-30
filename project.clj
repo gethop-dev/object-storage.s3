@@ -20,9 +20,10 @@
                                       :password :env/clojars_password
                                       :sign-releases false}]]
   :profiles
-  {:dev {:dependencies [[digest "1.4.8"]]
-         :plugins [[jonase/eastwood "0.3.4"]
-                   [lein-cljfmt "0.6.2"]]}
+  {:dev [:project/dev :profiles/dev]
    :repl {:repl-options {:host "0.0.0.0"
-                         :port 4001}
-          :plugins [[cider/cider-nrepl "0.20.0"]]}})
+                         :port 4001}}
+   :profiles/dev {}
+   :project/dev {:dependencies [[digest "1.4.8"]]
+                 :plugins [[jonase/eastwood "0.3.4"]
+                           [lein-cljfmt "0.6.2"]]}})
