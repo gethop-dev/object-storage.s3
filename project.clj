@@ -3,7 +3,7 @@
   :url "https://github.com/magnetcoop/object-storage.s3"
   :license {:name "Mozilla Public Licence 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :min-lein-version "2.8.3"
+  :min-lein-version "2.9.0"
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [amazonica "0.3.143" :exclusions [com.amazonaws/aws-java-sdk
                                                    com.amazonaws/amazon-kinesis-client
