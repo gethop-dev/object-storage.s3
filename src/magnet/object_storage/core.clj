@@ -39,7 +39,27 @@
 
 (defprotocol ObjectStorage
   "Abstraction for managing objects storage"
-  (put-object [this object-id object] [this object-id object opts])
-  (get-object [this object-id] [this object-id opts])
-  (get-object-url [this object-id] [this object-id opts])
-  (delete-object [this object-id] [this object-id opts]))
+  (put-object
+    [this object-id object]
+    [this object-id object opts]
+    "Put `object` in the storage system, using `object-id` as the key.
+  Use `opts` to specify additional put options.
+
+  `object` can be either a File object or an InputStream. In the
+  latter case, if you know the size of the content in the InputStream,
+  add the `:metadata` key to the `opts` map. Its value should be a map
+  with a key called `:object-size`, with the size as its value.")
+  (get-object
+    [this object-id]
+    [this object-id opts]
+    "Get the object with key `object-id` from the storage system, using `opts` options")
+  (get-object-url
+    [this object-id]
+    [this object-id opts]
+    "Generates a url allowing access to the object without the need to auth oneself.
+  Get the object with key `object-id` from the storage system, using `opts` options")
+  (delete-object
+    [this object-id]
+    [this object-id opts]
+    "Delete the object `object-id` from the storage system
+  Use `opts` to specify additional delete options."))
