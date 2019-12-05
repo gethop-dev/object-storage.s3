@@ -2,7 +2,7 @@
 [![Clojars Project](https://img.shields.io/clojars/v/magnet/object-storage.s3.svg)](https://clojars.org/magnet/object-storage.s3)
 
 
-# Duct Object Storage
+# Duct Object Storage S3
 
 A [Duct](https://github.com/duct-framework/duct) library that provides [Integrant](https://github.com/weavejester/integrant) keys for managing AWS S3 objects, implementing the [ObjectStorage](https://github.com/magnetcoop/object-storage.core) protocol.
 
