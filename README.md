@@ -4,7 +4,7 @@
 
 # Duct Object Storage
 
-A [Duct](https://github.com/duct-framework/duct) library that provides [Integrant](https://github.com/weavejester/integrant) keys for managing AWS S3 objects, implementing the `ObjectStorage` protocol.
+A [Duct](https://github.com/duct-framework/duct) library that provides [Integrant](https://github.com/weavejester/integrant) keys for managing AWS S3 objects, implementing the [ObjectStorage](https://github.com/magnetcoop/object-storage.core) protocol.
 
 ## Installation
 
@@ -28,7 +28,7 @@ Example configuration, with a presigned URL life span of 30 minutes:
 
 ### Performing S3 object operations
 
-We need to require the `magnet.object-storage.core` namespace to get the `ObjectStorage` protocol definition. 
+We need to require the `magnet.object-storage.core` namespace to get the `ObjectStorage` protocol definition.
 
 ``` clj
 user> (require '[magnet.object-storage.core :as object-storage])
@@ -53,7 +53,7 @@ Once we have the protocol in place, we can use the `AWSS3Bucket` record to perfo
 #### `(put-object s3-boundary object-id object)`
 
 * description: Uploads an object to S3 with `object-id` as its S3 key.
-* parameters: 
+* parameters:
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The S3 key for the object that we want to upload.
   - `object`: The file we want to upload (as a `java.io.File`-compatible value).
@@ -89,7 +89,7 @@ user> (object-storage/put-object s3-boundary
 #### `(put-object s3-boundary object-id object opts)`
 
 * description: Uploads an object to S3 with `object-id` as its key, using additional options.
-* parameters: 
+* parameters:
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The S3 key for the object that we want to upload.
   - `object`: The file we want to upload. It can be either a `java.io.File`-compatible value or an `java.io.InputStream`-compatible value. In the latter case, if you know the size of the content in the InputStream, add the `:metadata` key to the `opts` map.
@@ -103,7 +103,7 @@ user> (object-storage/put-object s3-boundary
   - `:success?`: boolean stating if the operation was successful or note
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
 
-  
+
 Let's see an example. We want to upload an object that is an InputStream instead of a `File`. A typical use case for this scenario is that the object that we want to upload to S3 is a file that is being uploaded from an HTTP client. Ring adapters usually provides us with an InputStream, instead of a File. In this example we mock it by using a string and creating an InputStream from it:
 
 ```clj
@@ -151,7 +151,7 @@ Let's see an example. First for a successful invocation:
 user> (object-storage/get-object s3-boundary "some-existing-s3-key")
 {:success? true,
  :object
- #object[com.amazonaws.services.s3.model.S3ObjectInputStream 0x710e43ea 
+ #object[com.amazonaws.services.s3.model.S3ObjectInputStream 0x710e43ea
  "com.amazonaws.services.s3.model.S3ObjectInputStream@710e43ea"]}
 ```
 
@@ -192,9 +192,9 @@ user> (object-storage/get-object s3-boundary
                                  {:encryption {:secret-key aes256-key}})
 {:success? true,
  :object
- #object[com.amazonaws.services.s3.model.S3ObjectInputStream 0x5e7fc790 
+ #object[com.amazonaws.services.s3.model.S3ObjectInputStream 0x5e7fc790
  "com.amazonaws.services.s3.model.S3ObjectInputStream@5e7fc790"]}
-user> 
+user>
 ```
 
 Let's also see what happens if we use the wrong cryptographic key for client side decryption:
@@ -205,7 +205,7 @@ user> (def another-aes256-key
           (.init kg 256 (SecureRandom.))
           (.generateKey kg)))
 #'user/another-aes256-key
-user> (object-storage/get-object s3-boundary 
+user> (object-storage/get-object s3-boundary
                                  "some-s3-key"
                                  {:encryption {:secret-key another-aes256-key}})
 {:success? false,
@@ -269,7 +269,7 @@ user> (object-storage/get-object-url s3-boundary "some-s3-key")
 #### `(get-object-url s3-boundary object-id opts)`
 
 * description: Gets a presigned URL that can be used to access the specified object without authentication, using special options. The URL lifespan is specified in the `AWSS3Bucket` record initialization.
-* parameters: 
+* parameters:
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The key of the object in the S3 bucket that we want to access without authentication.
   - `opts`: A map of options. Currently supported option keys are:

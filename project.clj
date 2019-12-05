@@ -1,4 +1,4 @@
-(defproject magnet/object-storage.s3 "0.6.0-SNAPSHOT"
+(defproject magnet/object-storage.s3 "0.7.0"
   :description "A Duct library for managing AWS S3 objects"
   :url "https://github.com/magnetcoop/object-storage.s3"
   :license {:name "Mozilla Public Licence 2.0"
@@ -10,7 +10,8 @@
                                                    com.amazonaws/dynamodb-streams-kinesis-adapter]]
                  [com.amazonaws/aws-java-sdk-core "1.11.586"]
                  [com.amazonaws/aws-java-sdk-s3 "1.11.586"]
-                 [integrant "0.7.0"]]
+                 [integrant "0.7.0"]
+                 [magnet/object-storage.core "0.1.0"]]
   :deploy-repositories [["snapshots" {:url "https://clojars.org/repo"
                                       :username :env/clojars_username
                                       :password :env/clojars_password
