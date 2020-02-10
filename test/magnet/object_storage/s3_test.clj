@@ -25,7 +25,7 @@
   (f))
 
 (def presigned-url-lifespan 1)
-(def config {:bucket-name "hydrogen-test" #_(System/getenv "TEST_OBJECT_STORAGE_S3_BUCKET")
+(def config {:bucket-name (System/getenv "TEST_OBJECT_STORAGE_S3_BUCKET")
              :presigned-url-lifespan presigned-url-lifespan})
 (def test-file-1-path "test-file-1")
 (def test-file-2-path "test-file-2")
