@@ -166,6 +166,27 @@
   :args ::core/delete-object-args
   :ret  ::core/delete-object-ret)
 
+(defn- list-objects*
+  [this parent-object-id]
+  {:pre [(and (s/valid? ::AWSS3Bucket this)
+              (s/valid? ::core/object-id parent-object-id))]}
+  (try
+    (let [result (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
+                                          :prefix (str parent-object-id)})]
+      {:success? true
+       :objects (->> result
+                     :object-summaries
+                     (map (fn [{:keys [key last-modified size]}]
+                            {:object-id key
+                             :last-modified last-modified
+                             :size size})))})
+    (catch Exception e
+      (ex->result e))))
+
+(s/fdef list-objects*
+  :args ::core/list-objects-args
+  :ret  ::core/list-objects-ret)
+
 (defrecord AWSS3Bucket [bucket-name presigned-url-lifespan]
   core/ObjectStorage
   (put-object [this object-id object]
@@ -186,7 +207,10 @@
   (delete-object [this object-id]
     (delete-object* this object-id {}))
   (delete-object [this object-id opts]
-    (delete-object* this object-id opts)))
+    (delete-object* this object-id opts))
+
+  (list-objects [this parent-object-id]
+    (list-objects* this parent-object-id)))
 
 (defmethod ig/init-key :magnet.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan]
                                                      :or {presigned-url-lifespan default-presigned-url-lifespan}}]

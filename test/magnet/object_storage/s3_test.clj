@@ -25,7 +25,7 @@
   (f))
 
 (def presigned-url-lifespan 1)
-(def config {:bucket-name (System/getenv "TEST_OBJECT_STORAGE_S3_BUCKET")
+(def config {:bucket-name "hydrogen-test" #_(System/getenv "TEST_OBJECT_STORAGE_S3_BUCKET")
              :presigned-url-lifespan presigned-url-lifespan})
 (def test-file-1-path "test-file-1")
 (def test-file-2-path "test-file-2")
@@ -111,6 +111,26 @@
     (let [result (core/delete-object s3-boundary (str (UUID/randomUUID)))]
       (testing "Amazonica is expected to allow deletion of a file that doesn't exist."
         (is (:success? result))))))
+
+(deftest ^:integration list-test
+  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+        file-key (str "integration-test/integration-test-" (UUID/randomUUID))
+        file-key-2 (str "integration-test-2/integration-test-" (UUID/randomUUID))]
+    (core/put-object s3-boundary file-key (io/file test-file-1-path))
+    (core/put-object s3-boundary file-key-2 (io/file test-file-1-path))
+    (let [result (core/list-objects s3-boundary "integration-test/")]
+      (testing "list-objects test"
+        (is (:success? result))
+        (is (some (fn [{:keys [object-id]}]
+                    (= object-id file-key))
+                  (:objects result)))
+        (is (not-any? (fn [{:keys [object-id]}]
+                        (= object-id file-key-2))
+                      (:objects result)))
+        (is (every? #(and (:object-id %)
+                          (:last-modified %)
+                          (:size %))
+                    (:objects result)))))))
 
 (deftest ^:integration replace-object-test
   (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
