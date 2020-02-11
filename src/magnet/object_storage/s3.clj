@@ -166,6 +166,25 @@
   :args ::core/delete-object-args
   :ret  ::core/delete-object-ret)
 
+(defn- build-object-list
+  "Build a list of all child objects for the given `parent-object-id`
+  from S3 bucket reference by `this`. As an S3 bucket can contain a
+  virtually unlimited number of objects, listObjectsV2 paginates the
+  results. This function takes care of looping while there are still
+  objects pending."
+  [this parent-object-id]
+  {:pre [(and (s/valid? ::AWSS3Bucket this)
+              (s/valid? ::core/object-id parent-object-id))]}
+  (loop [object-list []
+         partial-list (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
+                                               :prefix (str parent-object-id)})]
+    (let [object-list (concat object-list (:object-summaries partial-list))]
+      (if-not (:truncated? partial-list)
+        object-list
+        (recur object-list (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
+                                                    :prefix (str parent-object-id)
+                                                    :continuation-token (:next-continuation-token partial-list)}))))))
+
 (defn- list-objects*
   "Lists all child objects for the given `parent-object-id` from S3
   bucket reference by `this`."
@@ -173,15 +192,13 @@
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id parent-object-id))]}
   (try
-    (let [result (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
-                                          :prefix (str parent-object-id)})]
+    (let [result (build-object-list this parent-object-id)]
       {:success? true
-       :objects (->> result
-                     :object-summaries
-                     (pmap (fn [{:keys [key last-modified size]}]
-                             {:object-id key
-                              :last-modified last-modified
-                              :size size})))})
+       :objects (pmap (fn [{:keys [key last-modified size]}]
+                        {:object-id key
+                         :last-modified last-modified
+                         :size size})
+                      result)})
     (catch Exception e
       (ex->result e))))
 
