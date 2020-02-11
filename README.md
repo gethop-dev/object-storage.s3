@@ -307,6 +307,37 @@ user> (object-storage/get-object-url s3-boundary
  "https://hydrogen-test.s3.eu-west-1.amazonaws.com/some-s3-key?response-content-disposition=attachment%3B%20filename%3Dother-arbitrary-filename&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20191101T210217Z&X-Amz-SignedHeaders=host&X-Amz-Expires=1799&X-Amz-Credential=AKIAIIOB7F5TDVMDNXRQ%2F20191101%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Signature=13f2bb4b32c5efb0cf4ce8c2aeba66eed1d483dd8d4ec2d93b03fefd94f0f525"}
 ```
 
+#### `(list-objects s3-boundary parent-object-id)`
+
+* description: Gets a list of children objects from a given S3 object key.
+* parameters:
+  - `s3-boundary`: An `AWSS3Bucket` record.
+  - `parent-object-id`: The key of the object in the S3 bucket that we want to access.
+* return value: a map with the following keys:
+  - `:success?`: boolean stating if the operation was successful or note
+  - `:objects`: If the operation was successful, this key contains a collection of maps.Each map represents a children object. Every object has 3 attributes: `object-id`, `last-modified` and `size`. Note that the collection returned will also contain the parent object since from the S3 perspective there is no folders concept.
+  - `:error-details`: a map with additional details on the problem encountered while trying retrieve the list of objects.
+
+Example:
+
+```clj
+user> (object-storage/list-objects s3-boundary "some-s3-key")
+{:success? true,
+ :objects
+ ({:object-id "documents/",
+   :last-modified
+   #object[org.joda.time.DateTime 0x5d61cd29 "2018-11-27T10:09:08.000+01:00"],
+   :size 0}
+  {:object-id "documents/a",
+   :last-modified
+   #object[org.joda.time.DateTime 0x6bdf58ef "2018-11-28T11:12:07.000+01:00"],
+   :size 15}
+  {:object-id "documents/download.png",
+   :last-modified
+   #object[org.joda.time.DateTime 0x3b389e64 "2018-11-29T10:20:09.000+01:00"],
+   :size 3400})}
+```
+
 ## Testing
 
 The library includes self-contained units tests, including some integration tests that depend on AWS S3 service. Those tests have the `^:integration` metadata keyword associated to them, so you can exclude them from our unit tests runs.
