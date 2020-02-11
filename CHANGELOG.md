@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this
 file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## 0.6.3 - 2020-02-11
+### Fixed
+- Change list-objects to handle S3 buckets with more than 1000 keys
+  (the page limit for listObjectsV2 API endpoint)
+
 ## 0.6.2 - 2020-02-11
 ### Changed
 - Change list-objects to use `pmap` instead of `map`.
