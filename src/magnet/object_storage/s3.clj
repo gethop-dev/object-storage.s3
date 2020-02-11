@@ -167,6 +167,8 @@
   :ret  ::core/delete-object-ret)
 
 (defn- list-objects*
+  "Lists all child objects for the given `parent-object-id` from S3
+  bucket reference by `this`."
   [this parent-object-id]
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id parent-object-id))]}
