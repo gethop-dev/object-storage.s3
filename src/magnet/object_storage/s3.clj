@@ -176,10 +176,10 @@
       {:success? true
        :objects (->> result
                      :object-summaries
-                     (map (fn [{:keys [key last-modified size]}]
-                            {:object-id key
-                             :last-modified last-modified
-                             :size size})))})
+                     (pmap (fn [{:keys [key last-modified size]}]
+                             {:object-id key
+                              :last-modified last-modified
+                              :size size})))})
     (catch Exception e
       (ex->result e))))
 
