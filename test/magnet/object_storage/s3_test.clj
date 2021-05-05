@@ -154,7 +154,9 @@
         (is (every? #(and (:object-id %)
                           (:last-modified %)
                           (:size %))
-                    (:objects result)))))))
+                    (:objects result)))))
+    (core/delete-object s3-boundary file-key)
+    (core/delete-object s3-boundary file-key-2)))
 
 (deftest ^:integration replace-object-test
   (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
