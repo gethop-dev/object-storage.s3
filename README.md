@@ -58,7 +58,7 @@ Once we have the protocol in place, we can use the `AWSS3Bucket` record to perfo
   - `object-id`: The S3 key for the object that we want to upload.
   - `object`: The file we want to upload (as a `java.io.File`-compatible value).
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:error-details`: a map with additional details on the problem encountered while trying to upload the object.
 
 Let's see an example. First for a successful invocation:
@@ -100,7 +100,7 @@ user> (object-storage/put-object s3-boundary
       - `:secret-key`: Any AmazonS3EncryptionClient supported symmetric key (e.g., AES256, AES128, etc.)
       - `:key-pair`:  Any AmazonS3EncryptionClient supported asymmetric key (e.g., RSA. EC, etc.)
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
 
 
@@ -134,6 +134,51 @@ user> (object-storage/put-object s3-boundary
 {:success? true}
 ```
 
+#### `(copy-object s3-boundary source-object-id destination-object-id)`
+
+* description: Copies an object from S3 into the same Bucket.
+* parameters:
+  - `s3-boundary`: An `AWSS3Bucket` record.
+  - `source-object-id`: The key of the object in the S3 bucket that we want to copy.
+  - `destination-object-id`: The key of the object in the S3 bucket as result of the copied object.
+* return value: a map with the following keys:
+  - `:success?`: boolean stating if the operation was successful or not.
+  - `:error-details`: a map with additional details on the problem encountered while trying to copy the object.
+
+Let's see an example. First for a successful invocation:
+
+```clj
+user> (object-storage/copy-object s3-boundary "some-existing-source-s3-key" "new-destination-s3-key")
+{:success? true}
+```
+
+Then for a failed one, requesting the same destination bucket key as the source:
+
+```clj
+user> (object-storage/copy-object s3-boundary "some-existing-source-s3-key" "some-existing-source-s3-key")
+{:success? false,
+ :error-details {:error-code "InvalidRequest",
+                 :error-type "Client",
+                 :status-code 400,
+                 :request-id "example-req-id",
+                 :service-name "Amazon S3",
+                 :message "This copy request is illegal because it is trying to copy an object to itself without changing the object's metadata, storage class, website redirect location or encryption attributes. (Service: Amazon S3; Status Code: 400; Error Code: InvalidRequest; Request ID: example-req-id; S3 Extended Request ID: example-long-req-id"}}
+```
+
+#### `(copy-object s3-boundary source-object-id destination-object-id opts)`
+
+* description: Copies an object from S3 into the same Bucket using additional options.
+* parameters:
+  - `s3-boundary`: An `AWSS3Bucket` record.
+  - `source-object-id`: The key of the object in the S3 bucket that we want to copy.
+  - `destination-object-id`: The key of the object in the S3 bucket as result of the copied object.
+  - `opts`: A map of options. Currently we do not support any yet.
+* return value: a map with the following keys:
+  - `:success?`: boolean stating if the operation was successful or not.
+  - `:error-details`: a map with additional details on the problem encountered while trying to copy the object.
+
+No need for examples for this case yet.
+
 #### `(get-object s3-boundary object-id)`
 
 * description: Retrieves an object from S3.
@@ -141,7 +186,7 @@ user> (object-storage/put-object s3-boundary
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The key of the object in the S3 bucket that we want to retrieve.
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:object`: If the operation was successful, this key contains an `InputStream`-compatible stream, on the desired object. Note that the `InputStream` returned by `get-object` should be closed (.e.g, via slurp) or the HTTP connection pool will be exhausted after several objects are retrieved.
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
 
@@ -180,7 +225,7 @@ user> (object-storage/get-object s3-boundary "some-non-existing-s3-key")
       - `:secret-key`: Any AmazonS3EncryptionClient supported symmetric key (e.g., AES256, AES128, etc.)
       - `:key-pair`:  Any AmazonS3EncryptionClient supported asymmetric key (e.g., RSA. EC, etc.)
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:object`: If the operation was successful, this key contains an `InputStream`-compatible stream, on the desired object. Note that the `InputStream` returned by `get-object` should be closed (.e.g, via slurp) or the HTTP connection pool will be exhausted after several objects are retrieved.
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
 
@@ -221,7 +266,7 @@ user> (object-storage/get-object s3-boundary
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The key of the object in the S3 bucket that we want to delete.
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
 
 Let's see an example. First for a successful invocation:
@@ -254,7 +299,7 @@ user> (object-storage/delete-object s3-boundary
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The key of the object in the S3 bucket that we want to get  without authentication.
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. In addition, the presigned URL is only valid for GET requests.
   - `:error-details`: a map with additional details on the problem encountered while trying to create the presigned URL.
 
@@ -280,7 +325,7 @@ user> (object-storage/get-object-url s3-boundary "some-s3-key")
       - `:delete`: Allows using a HTTP DELETE request.
     - `:filename`: Specifies the filename that will be included in the "Content-Disposition" header for `:read` requests. It allows retrieving the object with a different name that the S3 key it was stored under.
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. In addition, the presigned URL is only valid for GET requests.
   - `:error-details`: a map with additional details on the problem encountered while trying to create the presigned URL.
 
@@ -314,7 +359,7 @@ user> (object-storage/get-object-url s3-boundary
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `parent-object-id`: The key of the object in the S3 bucket that we want to access.
 * return value: a map with the following keys:
-  - `:success?`: boolean stating if the operation was successful or note
+  - `:success?`: boolean stating if the operation was successful or not.
   - `:objects`: If the operation was successful, this key contains a collection of maps.Each map represents a children object. Every object has 3 attributes: `object-id`, `last-modified` and `size`. Note that the collection returned will also contain the parent object since from the S3 perspective there is no folders concept.
   - `:error-details`: a map with additional details on the problem encountered while trying retrieve the list of objects.
 
@@ -351,6 +396,6 @@ If you want to run the integration tests, the following set of environment varia
 
 ## License
 
-Copyright (c) 2018, 2019, 2020 Magnet S Coop.
+Copyright (c) 2018, 2019, 2020, 2021 Magnet S Coop.
 
 The source code for the library is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
