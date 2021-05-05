@@ -70,6 +70,34 @@
   :args ::core/put-object-args
   :ret  ::core/put-object-ret)
 
+(defn- copy-object*
+  "Copy object identified with `source-object-id` as key into new object identified with `destination-object-id`
+   in same assumed S3 Bucket
+   For now there is no support to copy objects between different Buckets.
+   Use `opts` to specify additional options. Right now there is no one supported.
+   For now encryption is only supported just as an effect of copying an already encrypted object. There is no support
+   to change the original encryption or metadata, for now."
+  [this source-object-id destination-object-id opts]
+  {:pre [(and (s/valid? ::AWSS3Bucket this)
+              (s/valid? ::core/object-id source-object-id)
+              (s/valid? ::core/object-id destination-object-id)
+              (s/valid? ::core/copy-object-opts opts))]}
+  (try
+    (let [bucket-name (:bucket-name this)
+          request {:source-bucket-name bucket-name
+                   :destination-bucket-name bucket-name
+                   :source-key source-object-id
+                   :destination-key destination-object-id}]
+      ;; copyObject either succeeds or throws an exception
+      (aws-s3/copy-object request)
+      {:success? true})
+    (catch Exception e
+      (ex->result e))))
+
+(s/fdef copy-object*
+  :args ::core/copy-object-args
+  :ret  ::core/copy-object-ret)
+
 (defn- get-object*
   "Get the object with key `object-id` from S3 bucket referenced by `this`, using `opts` options"
   [this object-id opts]
@@ -212,6 +240,11 @@
     (put-object* this object-id object {}))
   (put-object [this object-id object opts]
     (put-object* this object-id object opts))
+
+  (copy-object [this source-object-id destination-object-id]
+    (copy-object* this source-object-id destination-object-id {}))
+  (copy-object [this source-object-id destination-object-id opts]
+    (copy-object* this source-object-id destination-object-id opts))
 
   (get-object [this object-id]
     (get-object* this object-id {}))

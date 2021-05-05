@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this
 file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## Unreleased
+### Added
+- Add copy-object method
+
 ## 0.6.3 - 2020-02-11
 ### Fixed
 - Change list-objects to handle S3 buckets with more than 1000 keys

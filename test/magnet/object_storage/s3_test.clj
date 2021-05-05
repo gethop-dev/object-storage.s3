@@ -98,6 +98,30 @@
                (digest/sha-256 (slurp (:object get-result)))))))
     (core/delete-object s3-boundary file-key)))
 
+(deftest ^:integration copy-get-file-test
+  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+        source-file-key (str "integration-test-" (UUID/randomUUID))
+        put-result (core/put-object s3-boundary source-file-key (io/file test-file-1-path))]
+    (testing "testing put-object"
+      (is (:success? put-result)))
+    (testing "Successful copy and get object"
+      (let [destination-file-key (str "integration-test-" (UUID/randomUUID))
+            copy-result (core/copy-object s3-boundary source-file-key destination-file-key)]
+        (testing "testing copy-object"
+          (is (:success? copy-result)))
+        (testing "testing get-object on copy"
+          (let [get-result (core/get-object s3-boundary destination-file-key)]
+            (is (:success? get-result))
+            (is (= (digest/sha-256 (File. test-file-1-path))
+                   (digest/sha-256 (:object get-result))))))
+        (core/delete-object s3-boundary destination-file-key)))
+    (testing "Failing copy because of source object replace attempt"
+      (let [destination-file-key source-file-key
+            copy-result (core/copy-object s3-boundary source-file-key destination-file-key)]
+        (is (and (= false (:success? copy-result))
+                 (= 400 (get-in copy-result [:error-details :status-code]))))))
+    (core/delete-object s3-boundary source-file-key)))
+
 (deftest ^:integration delete-test
   (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))]
@@ -231,3 +255,31 @@
         (is (= (digest/sha-256 f)
                (digest/sha-256 (slurp (:object get-result-aes)))))))
     (core/delete-object s3-boundary file-key)))
+
+(deftest ^:integration encrypted-copy-get-test
+  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+        source-file-key (str "integration-test-" (UUID/randomUUID))
+        destination-file-key (str "integration-test-" (UUID/randomUUID))
+        f (File. test-file-1-path)]
+    (testing "testing get encrypted object, copy it and get it back"
+      (let [put-result-aes (core/put-object s3-boundary source-file-key f {:encryption {:secret-key aes256-key}})
+            copy-result (core/copy-object s3-boundary source-file-key destination-file-key)
+            get-copy-result-aes (core/get-object s3-boundary
+                                                 destination-file-key
+                                                 {:encryption {:secret-key aes256-key}})
+            get-result-no-key (core/get-object s3-boundary destination-file-key)
+            get-result-aes-wrong-key (core/get-object s3-boundary
+                                                      destination-file-key
+                                                      {:encryption {:secret-key another-aes256-key}})]
+        (is (:success? put-result-aes))
+        (is (:success? copy-result))
+        (is (:success? get-copy-result-aes))
+        (is (:success? get-result-no-key))
+        (is (and (= false (:success? get-result-aes-wrong-key))
+                 (= "Client" (get-in get-result-aes-wrong-key [:error-details :error-type]))))
+        (is (not= (digest/sha-256 f)
+                  (digest/sha-256 (slurp (:object get-result-no-key)))))
+        (is (= (digest/sha-256 f)
+               (digest/sha-256 (slurp (:object get-copy-result-aes)))))))
+    (core/delete-object s3-boundary source-file-key)
+    (core/delete-object s3-boundary destination-file-key)))
