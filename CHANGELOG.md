@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this
 file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
+## Unreleased
+### Changed
+- Update `get-object-url` opts to accept `content-type` and `content-disposition`
+
 ## 0.6.4 - 2020-05-05
 ### Added
 - Add copy-object method

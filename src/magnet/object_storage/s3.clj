@@ -135,10 +135,15 @@
   (k {:create "PUT" :read "GET", :update "PUT", :delete "DELETE"}))
 
 (defn- attachment-header
-  [filename]
-  (->
-   (ResponseHeaderOverrides.)
-   (.withContentDisposition (str "attachment; filename=" filename))))
+  [content-disposition content-type filename]
+  (let [rho (ResponseHeaderOverrides.)
+        cd (str (case content-disposition
+                  :attachment "attachment"
+                  :inline "inline")
+             "; filename=" filename)]
+    (-> rho
+      (.withContentType content-type)
+      (.withContentDisposition cd))))
 
 (defn- get-object-url*
   "Generates a url allowing access to the object without the need to auth oneself.
@@ -152,6 +157,8 @@
     (let [expiration (Date. (+ (System/currentTimeMillis)
                                (int (* (:presigned-url-lifespan this) 60 1000))))
           method (:method opts)
+          content-disposition (get opts :content-disposition :attachment)
+          content-type (get opts :content-type "application/octet-stream")
           filename (:filename opts)
           request {:bucket-name (:bucket-name this)
                    :key object-id
@@ -161,7 +168,7 @@
                     (assoc :method (kw->http-method method))
 
                     filename
-                    (assoc :response-headers (attachment-header filename)))
+                    (assoc :response-headers (attachment-header content-disposition content-type filename)))
           presigned-url (->
                          request
                          (aws-s3/generate-presigned-url)
