@@ -140,10 +140,10 @@
         cd (str (case content-disposition
                   :attachment "attachment"
                   :inline "inline")
-             "; filename=" filename)]
+                "; filename=" filename)]
     (-> rho
-      (.withContentType content-type)
-      (.withContentDisposition cd))))
+        (.withContentType content-type)
+        (.withContentDisposition cd))))
 
 (defn- get-object-url*
   "Generates a url allowing access to the object without the need to auth oneself.

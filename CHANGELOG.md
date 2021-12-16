@@ -5,6 +5,10 @@ file. This change log follows the conventions of
 
 ## Unreleased
 
+## 0.6.6 - 2021-12-16
+### Fixed
+- Fix formatting errors
+
 ## 0.6.5 - 2021-12-16
 ### Changed
 - Update `get-object-url` opts to accept `content-type` and `content-disposition`
