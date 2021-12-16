@@ -4,6 +4,8 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## Unreleased
+
+## 0.6.5 - 2021-12-16
 ### Changed
 - Update `get-object-url` opts to accept `content-type` and `content-disposition`
 
