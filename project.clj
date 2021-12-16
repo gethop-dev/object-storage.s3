@@ -26,6 +26,6 @@
                          :port 4001}}
    :profiles/dev {}
    :project/dev {:dependencies [[digest "1.4.8"]
-                                [http-kit "2.3.0"]]
+                                [http-kit "2.5.3"]]
                  :plugins [[jonase/eastwood "0.3.4"]
                            [lein-cljfmt "0.6.2"]]}})
