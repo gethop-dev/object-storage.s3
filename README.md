@@ -324,6 +324,8 @@ user> (object-storage/get-object-url s3-boundary "some-s3-key")
       - `:update`: Allows using a HTTP PUT request.
       - `:delete`: Allows using a HTTP DELETE request.
     - `:filename`: Specifies the filename that will be included in the "Content-Disposition" header for `:read` requests. It allows retrieving the object with a different name that the S3 key it was stored under.
+    - `:content-type`: Specifies the value that will be included in the "Content-Type" header. Uses "application/octet-stream" as default if unspecified. Requires `filename` to be present in the opts.
+    - `:content-disposition`: Specifies the value that will be included in the "Content-Disposition" header. Has to be either `:inline` or `:attachment`. Defaults to `:attachment`. Requires `filename` to be present in the opts.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. In addition, the presigned URL is only valid for GET requests.
