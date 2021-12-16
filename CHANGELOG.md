@@ -4,6 +4,8 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## Unreleased
+
+## 0.6.7 - 2021-12-16
 ### Fixed
 - Bump `http-kit` dependency to fix SSL+SNI Connection Errors
 
