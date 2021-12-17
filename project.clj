@@ -11,7 +11,7 @@
                  [com.amazonaws/aws-java-sdk-core "1.11.586"]
                  [com.amazonaws/aws-java-sdk-s3 "1.11.586"]
                  [integrant "0.7.0"]
-                 [magnet/object-storage.core "0.1.2"]]
+                 [magnet/object-storage.core "0.1.3"]]
   :deploy-repositories [["snapshots" {:url "https://clojars.org/repo"
                                       :username :env/clojars_username
                                       :password :env/clojars_password

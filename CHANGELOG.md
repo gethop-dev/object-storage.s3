@@ -4,6 +4,8 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## Unreleased
+### Changed
+- Bump `object-storage.core` dependency to get updated specs for `get-object-url-opts`
 
 ## 0.6.7 - 2021-12-16
 ### Fixed
