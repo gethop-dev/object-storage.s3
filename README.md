@@ -1,5 +1,5 @@
-[![Build Status](https://api.travis-ci.com/magnetcoop/object-storage.s3.svg?branch=master)](https://travis-ci.com/magnetcoop/object-storage.s3)
-[![Clojars Project](https://img.shields.io/clojars/v/magnet/object-storage.s3.svg)](https://clojars.org/magnet/object-storage.s3)
+[![ci-cd](https://github.com/gethop-dev/object-storage.s3/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/gethop-dev/object-storage.s3/actions/workflows/ci-cd.yml)
+[![Clojars Project](https://img.shields.io/clojars/v/dev.gethop/object-storage.s3.svg)](https://clojars.org/dev.gethop/object-storage.s3)
 
 
 # Duct Object Storage S3
@@ -8,7 +8,7 @@ A [Duct](https://github.com/duct-framework/duct) library that provides [Integran
 
 ## Installation
 
-[![Clojars Project](https://clojars.org/magnet/object-storage.s3/latest-version.svg)](https://clojars.org/magnet/object-storage.s3)
+[![Clojars Project](https://clojars.org/dev.gethop/object-storage.s3/latest-version.svg)](https://clojars.org/dev.gethop/object-storage.s3)
 
 ## Usage
 
@@ -398,6 +398,6 @@ If you want to run the integration tests, the following set of environment varia
 
 ## License
 
-Copyright (c) 2018, 2019, 2020, 2021 Magnet S Coop.
+Copyright (c) 2022 HOP Technologies
 
 The source code for the library is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.

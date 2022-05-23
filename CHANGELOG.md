@@ -5,6 +5,17 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+## [0.6.9] - 2022-05-23
+### Changed
+- Moving the repository to [gethop-dev](https://github.com/gethop-dev) organization
+- CI/CD solution switch from [TravisCI](https://travis-ci.org/) to [GitHub Actions](Ihttps://github.com/features/actions)
+- `lein`, `cljfmt` and `eastwood` dependencies bump
+- Fix several `eastwood` warnings
+- update this changelog's releases tags links
+
+### Added
+- Source code linting using [clj-kondo](https://github.com/clj-kondo/clj-kondo)
+
 ## [0.6.8] - 2021-12-17
 ### Changed
 - Bump `object-storage.core` dependency to get updated specs for `get-object-url-opts`
@@ -42,7 +53,8 @@ file. This change log follows the conventions of
 ### Changed
 - Use the protocol definition in [magnet.object-storage.core](https://github.com/magnetcoop/object-storage.core) instead of a local definition (it doesn't affect the functionality)
 
-[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.6.8...HEAD
+[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.6.9...HEAD
+[0.6.9]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.9
 [0.6.8]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.8
 [0.6.7]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.7
 [0.6.6]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.6
