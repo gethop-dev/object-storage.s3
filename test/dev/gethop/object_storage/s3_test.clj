@@ -2,26 +2,25 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-(ns magnet.object-storage.s3-test
+(ns dev.gethop.object-storage.s3-test
   (:require [clojure.java.io :as io]
             [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
+            [dev.gethop.object-storage.s3]
             [digest]
             [integrant.core :as ig]
             [magnet.object-storage.core :as core]
-            [magnet.object-storage.s3]
             [org.httpkit.client :as http])
-  (:import [com.amazonaws.services.s3.model AmazonS3Exception]
+  (:import [dev.gethop.object_storage.s3 AWSS3Bucket]
            [java.io File]
            [java.net URL]
            [java.security KeyPairGenerator]
            [java.security SecureRandom]
            [java.util UUID]
-           [javax.crypto KeyGenerator]
-           [magnet.object_storage.s3 AWSS3Bucket]))
+           [javax.crypto KeyGenerator]))
 
 (defn enable-instrumentation [f]
-  (-> (stest/enumerate-namespace 'magnet.object-storage.s3) stest/instrument)
+  (-> (stest/enumerate-namespace 'dev.gethop.object-storage.s3) stest/instrument)
   (f))
 
 (def presigned-url-lifespan 1)
@@ -62,13 +61,13 @@
     (.generateKeyPair kg)))
 
 (deftest protocol-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)]
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)]
     (testing "ig/init-key returns the right type of record for the boundary"
       (is (= (class s3-boundary)
              AWSS3Bucket)))))
 
 (deftest ^:integration put-get-file-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
         put-result (core/put-object s3-boundary file-key (io/file test-file-1-path))]
     (testing "testing put-object"
@@ -81,7 +80,7 @@
     (core/delete-object s3-boundary file-key)))
 
 (deftest ^:integration put-get-stream-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
         bytes (.getBytes "Test message")
         stream (io/input-stream bytes)
@@ -99,7 +98,7 @@
     (core/delete-object s3-boundary file-key)))
 
 (deftest ^:integration copy-get-file-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         source-file-key (str "integration-test-" (UUID/randomUUID))
         put-result (core/put-object s3-boundary source-file-key (io/file test-file-1-path))]
     (testing "testing put-object"
@@ -123,7 +122,7 @@
     (core/delete-object s3-boundary source-file-key)))
 
 (deftest ^:integration delete-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))]
     (core/put-object s3-boundary file-key (io/file test-file-1-path))
     (core/delete-object s3-boundary file-key)
@@ -137,7 +136,7 @@
         (is (:success? result))))))
 
 (deftest ^:integration list-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test/integration-test-" (UUID/randomUUID))
         file-key-2 (str "integration-test-2/integration-test-" (UUID/randomUUID))]
     (core/put-object s3-boundary file-key (io/file test-file-1-path))
@@ -159,7 +158,7 @@
     (core/delete-object s3-boundary file-key-2)))
 
 (deftest ^:integration replace-object-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
         f1 (File. test-file-1-path)
         f2 (File. test-file-2-path)]
@@ -185,7 +184,7 @@
         :forbidden))))
 
 (deftest ^:integration presigned-url-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
         f (File. test-file-1-path)]
     (core/put-object s3-boundary file-key f)
@@ -228,7 +227,7 @@
     (core/delete-object s3-boundary file-key)))
 
 (deftest ^:integration encrypted-put-get-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
         f (File. test-file-1-path)]
     (testing "testing encrypted f put-get"
@@ -259,7 +258,7 @@
     (core/delete-object s3-boundary file-key)))
 
 (deftest ^:integration encrypted-copy-get-test
-  (let [s3-boundary (ig/init-key :magnet.object-storage/s3 config)
+  (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         source-file-key (str "integration-test-" (UUID/randomUUID))
         destination-file-key (str "integration-test-" (UUID/randomUUID))
         f (File. test-file-1-path)]

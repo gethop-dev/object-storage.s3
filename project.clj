@@ -1,6 +1,6 @@
-(defproject magnet/object-storage.s3 "0.6.9-SNAPSHOT"
+(defproject dev.gethop/object-storage.s3 "0.6.9-SNAPSHOT"
   :description "A Duct library for managing AWS S3 objects"
-  :url "https://github.com/magnetcoop/object-storage.s3"
+  :url "https://github.com/gethop-dev/object-storage.s3"
   :license {:name "Mozilla Public Licence 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :min-lein-version "2.9.0"

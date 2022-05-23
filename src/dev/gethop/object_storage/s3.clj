@@ -2,7 +2,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-(ns magnet.object-storage.s3
+(ns dev.gethop.object-storage.s3
   (:require [amazonica.aws.s3 :as aws-s3]
             [amazonica.core :refer [ex->map]]
             [clojure.spec.alpha :as s]
@@ -271,7 +271,7 @@
   (list-objects [this parent-object-id]
     (list-objects* this parent-object-id)))
 
-(defmethod ig/init-key :magnet.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan]
-                                                     :or {presigned-url-lifespan default-presigned-url-lifespan}}]
+(defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan]
+                                                         :or {presigned-url-lifespan default-presigned-url-lifespan}}]
   (map->AWSS3Bucket {:bucket-name bucket-name
                      :presigned-url-lifespan presigned-url-lifespan}))

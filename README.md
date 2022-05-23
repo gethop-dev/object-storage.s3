@@ -14,7 +14,7 @@ A [Duct](https://github.com/duct-framework/duct) library that provides [Integran
 
 ### Getting an `AWSS3Bucket` record
 
-This library provides a single Integrant key, `:magnet.object-storage/s3`, that returns an `AWSS3Bucket` record that can be used to perform `ObjectStorage` protocol operations on a given S3 bucket. For the `get-object-url` operation it generates a presigned URL that can be used to access objects in private buckets without holding any AWS credentials, with a limited life span. The key initialization expects the following keys:
+This library provides a single Integrant key, `:dev.gethop.object-storage/s3`, that returns an `AWSS3Bucket` record that can be used to perform `ObjectStorage` protocol operations on a given S3 bucket. For the `get-object-url` operation it generates a presigned URL that can be used to access objects in private buckets without holding any AWS credentials, with a limited life span. The key initialization expects the following keys:
 
 * `:bucket-name`: The name of the bucket where we want to perform S3 operations.
 * `:presigned-url-lifespan`: Lifespan for the presigned URLs. It is specified in minutes (can use fractional values), and the default value is one hour.
@@ -22,7 +22,7 @@ This library provides a single Integrant key, `:magnet.object-storage/s3`, that 
 Example configuration, with a presigned URL life span of 30 minutes:
 
 ``` edn
- :magnet.object-storage/s3 {:bucket-name "hydrogen-test"
+ :dev.gethop.object-storage/s3 {:bucket-name "hydrogen-test"
                             :presigned-url-lifespan 30}
 ```
 
@@ -41,10 +41,10 @@ Then we initiate the integrant key with an example configuration to get our S3 b
 user> (def config {:bucket-name "hydrogen-test"
                    :presigned-url-lifespan 30})
 #'user/config
-user> (require '[integrant.core :as ig]
-               '[magnet.object-storage.s3])
+user> (require '[dev.gethop.object-storage.s3]
+               '[integrant.core :as ig])
 nil
-user> (def s3-boundary (ig/init-key :magnet.object-storage/s3 config))
+user> (def s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config))
 #'user/s3-boundary
 ```
 
