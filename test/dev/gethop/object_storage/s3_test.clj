@@ -75,7 +75,7 @@
     (testing "testing get-object"
       (let [get-result (core/get-object s3-boundary file-key)]
         (is (:success? get-result))
-        (is (= (digest/sha-256 (File. test-file-1-path))
+        (is (= (digest/sha-256 (File. ^String test-file-1-path))
                (digest/sha-256 (:object get-result))))))
     (core/delete-object s3-boundary file-key)))
 
@@ -111,7 +111,7 @@
         (testing "testing get-object on copy"
           (let [get-result (core/get-object s3-boundary destination-file-key)]
             (is (:success? get-result))
-            (is (= (digest/sha-256 (File. test-file-1-path))
+            (is (= (digest/sha-256 (File. ^String test-file-1-path))
                    (digest/sha-256 (:object get-result))))))
         (core/delete-object s3-boundary destination-file-key)))
     (testing "Failing copy because of source object replace attempt"
@@ -160,8 +160,8 @@
 (deftest ^:integration replace-object-test
   (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
-        f1 (File. test-file-1-path)
-        f2 (File. test-file-2-path)]
+        f1 (File. ^String test-file-1-path)
+        f2 (File. ^String test-file-2-path)]
     (testing "It should be possible to replace an object."
       (let [file-upload-result (core/put-object s3-boundary file-key f1)
             file-2-upload-result (core/put-object s3-boundary file-key f2)
@@ -186,7 +186,7 @@
 (deftest ^:integration presigned-url-test
   (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
-        f (File. test-file-1-path)]
+        f (File. ^String test-file-1-path)]
     (core/put-object s3-boundary file-key f)
     (testing "testing default presigned url (defaults to :read operation)"
       (let [result (core/get-object-url s3-boundary file-key)
@@ -229,7 +229,7 @@
 (deftest ^:integration encrypted-put-get-test
   (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         file-key (str "integration-test-" (UUID/randomUUID))
-        f (File. test-file-1-path)]
+        f (File. ^String test-file-1-path)]
     (testing "testing encrypted f put-get"
       (let [put-result-rsa (core/put-object s3-boundary
                                             file-key f {:encryption {:key-pair rsa2048-key-pair}})
@@ -261,7 +261,7 @@
   (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)
         source-file-key (str "integration-test-" (UUID/randomUUID))
         destination-file-key (str "integration-test-" (UUID/randomUUID))
-        f (File. test-file-1-path)]
+        f (File. ^String test-file-1-path)]
     (testing "testing get encrypted object, copy it and get it back"
       (let [put-result-aes (core/put-object s3-boundary source-file-key f {:encryption {:secret-key aes256-key}})
             copy-result (core/copy-object s3-boundary source-file-key destination-file-key)

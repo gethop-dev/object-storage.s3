@@ -3,7 +3,7 @@
   :url "https://github.com/gethop-dev/object-storage.s3"
   :license {:name "Mozilla Public Licence 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :min-lein-version "2.9.0"
+  :min-lein-version "2.9.8"
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [amazonica "0.3.143" :exclusions [com.amazonaws/aws-java-sdk
                                                    com.amazonaws/amazon-kinesis-client
@@ -27,5 +27,9 @@
    :profiles/dev {}
    :project/dev {:dependencies [[digest "1.4.8"]
                                 [http-kit "2.5.3"]]
-                 :plugins [[jonase/eastwood "0.3.4"]
-                           [lein-cljfmt "0.6.2"]]}})
+                 :plugins [[jonase/eastwood "1.2.3"]
+                           [lein-cljfmt "0.8.0"]]
+                 :eastwood {:linters [:all]
+                            :ignored-faults {:unused-namespaces {dev.gethop.object-storage.s3-test true}
+                                             :keyword-typos {dev.gethop.object-storage.s3 true}}
+                            :debug [:progress :time]}}})

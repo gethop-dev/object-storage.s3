@@ -9,6 +9,7 @@
             [integrant.core :as ig]
             [magnet.object-storage.core :as core])
   (:import [com.amazonaws.services.s3.model ResponseHeaderOverrides]
+           [java.net URL]
            [java.util Date]))
 
 (def ^:const default-presigned-url-lifespan
@@ -23,8 +24,8 @@
     {:success? false
      :error-details (dissoc (ex->map e) :stack-trace)}
 
-    true
-    (let [error-details {:message (.getMessage e)}]
+    :else
+    (let [error-details {:message (.getMessage ^Exception e)}]
       {:success? false
        :error-details (cond-> error-details
                         (instance? com.amazonaws.AmazonClientException e)
@@ -155,7 +156,7 @@
               (s/valid? ::core/get-object-url-opts opts))]}
   (try
     (let [expiration (Date. (+ (System/currentTimeMillis)
-                               (int (* (:presigned-url-lifespan this) 60 1000))))
+                               (int (* (double (:presigned-url-lifespan this)) 60 1000))))
           method (:method opts)
           content-disposition (get opts :content-disposition :attachment)
           content-type (get opts :content-type "application/octet-stream")
@@ -169,10 +170,7 @@
 
                     filename
                     (assoc :response-headers (attachment-header content-disposition content-type filename)))
-          presigned-url (->
-                         request
-                         (aws-s3/generate-presigned-url)
-                         .toString)]
+          presigned-url (.toString ^URL (aws-s3/generate-presigned-url request))]
       ;; generatePresignedUrl either succeeds or throws an exception
       {:success? true
        :object-url presigned-url})
