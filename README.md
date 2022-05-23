@@ -23,7 +23,7 @@ Example configuration, with a presigned URL life span of 30 minutes:
 
 ``` edn
  :dev.gethop.object-storage/s3 {:bucket-name "hydrogen-test"
-                            :presigned-url-lifespan 30}
+                                :presigned-url-lifespan 30}
 ```
 
 ### Performing S3 object operations
