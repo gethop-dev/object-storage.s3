@@ -4,7 +4,7 @@
 
 # Duct Object Storage S3
 
-A [Duct](https://github.com/duct-framework/duct) library that provides [Integrant](https://github.com/weavejester/integrant) keys for managing AWS S3 objects, implementing the [ObjectStorage](https://github.com/magnetcoop/object-storage.core) protocol.
+A [Duct](https://github.com/duct-framework/duct) library that provides [Integrant](https://github.com/weavejester/integrant) keys for managing AWS S3 objects, implementing the [ObjectStorage](https://github.com/gethop-dev/object-storage.core) protocol.
 
 ## Installation
 
@@ -28,10 +28,10 @@ Example configuration, with a presigned URL life span of 30 minutes:
 
 ### Performing S3 object operations
 
-We need to require the `magnet.object-storage.core` namespace to get the `ObjectStorage` protocol definition.
+We need to require the `dev.gethop.object-storage.core` namespace to get the `ObjectStorage` protocol definition.
 
 ``` clj
-user> (require '[magnet.object-storage.core :as object-storage])
+user> (require '[dev.gethop.object-storage.core :as object-storage])
 nil
 ```
 

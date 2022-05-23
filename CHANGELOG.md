@@ -51,7 +51,7 @@ file. This change log follows the conventions of
 
 ## [0.6.0] - 2019-12-05
 ### Changed
-- Use the protocol definition in [magnet.object-storage.core](https://github.com/magnetcoop/object-storage.core) instead of a local definition (it doesn't affect the functionality)
+- Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality)
 
 [Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.6.9...HEAD
 [0.6.9]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.9

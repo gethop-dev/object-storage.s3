@@ -6,10 +6,10 @@
   (:require [clojure.java.io :as io]
             [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
+            [dev.gethop.object-storage.core :as core]
             [dev.gethop.object-storage.s3]
             [digest]
             [integrant.core :as ig]
-            [magnet.object-storage.core :as core]
             [org.httpkit.client :as http])
   (:import [dev.gethop.object_storage.s3 AWSS3Bucket]
            [java.io File]

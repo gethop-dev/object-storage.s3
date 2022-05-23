@@ -6,8 +6,8 @@
   (:require [amazonica.aws.s3 :as aws-s3]
             [amazonica.core :refer [ex->map]]
             [clojure.spec.alpha :as s]
-            [integrant.core :as ig]
-            [magnet.object-storage.core :as core])
+            [dev.gethop.object-storage.core :as core]
+            [integrant.core :as ig])
   (:import [com.amazonaws.services.s3.model ResponseHeaderOverrides]
            [java.net URL]
            [java.util Date]))
