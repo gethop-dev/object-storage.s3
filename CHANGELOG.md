@@ -4,6 +4,12 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+## [0.6.10] - 2022-05-23
+### Changed
+- Use the latest version of object-storage.core lib.
+
+### Fixed
+- Fix clj code indendation in README file.
 
 ## [0.6.9] - 2022-05-23
 ### Changed
@@ -52,7 +58,8 @@ file. This change log follows the conventions of
 ### Changed
 - Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality).
 
-[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.6.9...HEAD
+[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.6.10...HEAD
+[0.6.10]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.10
 [0.6.9]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.9
 [0.6.8]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.8
 [0.6.7]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.7
