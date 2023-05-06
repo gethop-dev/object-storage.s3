@@ -14,32 +14,31 @@ file. This change log follows the conventions of
 - update this changelog's releases tags links
 
 ### Added
-- Source code linting using [clj-kondo](https://github.com/clj-kondo/clj-kondo)
+- Source code linting using [clj-kondo](https://github.com/clj-kondo/clj-kondo).
 
 ## [0.6.8] - 2021-12-17
 ### Changed
-- Bump `object-storage.core` dependency to get updated specs for `get-object-url-opts`
+- Bump `object-storage.core` dependency to get updated specs for `get-object-url-opts`.
 
 ## [0.6.7] - 2021-12-16
 ### Fixed
-- Bump `http-kit` dependency to fix SSL+SNI Connection Errors
+- Bump `http-kit` dependency to fix SSL+SNI Connection Errors.
 
 ## [0.6.6] - 2021-12-16
 ### Fixed
-- Fix formatting errors
+- Fix formatting errors.
 
 ## [0.6.5] - 2021-12-16
 ### Changed
-- Update `get-object-url` opts to accept `content-type` and `content-disposition`
+- Update `get-object-url` opts to accept `content-type` and `content-disposition`.
 
 ## [0.6.4] - 2020-05-05
 ### Added
-- Add copy-object method
+- Add copy-object method.
 
 ## [0.6.3] - 2020-02-11
 ### Fixed
-- Change list-objects to handle S3 buckets with more than 1000 keys
-  (the page limit for listObjectsV2 API endpoint)
+- Change list-objects to handle S3 buckets with more than 1000 keys (the page limit for listObjectsV2 API endpoint).
 
 ## [0.6.2] - 2020-02-11
 ### Changed
@@ -47,11 +46,11 @@ file. This change log follows the conventions of
 
 ## [0.6.1] - 2020-02-10
 ### Added
-- Add list-objects method
+- Add list-objects method.
 
 ## [0.6.0] - 2019-12-05
 ### Changed
-- Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality)
+- Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality).
 
 [Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.6.9...HEAD
 [0.6.9]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.9
