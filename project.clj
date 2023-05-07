@@ -1,4 +1,4 @@
-(defproject dev.gethop/object-storage.s3 "0.7.0"
+(defproject dev.gethop/object-storage.s3 "0.7.1-SNAPSHOT"
   :description "A Duct library for managing AWS S3 objects"
   :url "https://github.com/gethop-dev/object-storage.s3"
   :license {:name "Mozilla Public Licence 2.0"
