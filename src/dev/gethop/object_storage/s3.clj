@@ -296,6 +296,8 @@
     (delete-object* this object-id opts))
 
   (list-objects [this parent-object-id]
+    (list-objects* this parent-object-id))
+  (list-objects [this parent-object-id _opts]
     (list-objects* this parent-object-id)))
 
 (defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan endpoint]
