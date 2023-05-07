@@ -14,16 +14,25 @@ A [Duct](https://github.com/duct-framework/duct) library that provides [Integran
 
 ### Getting an `AWSS3Bucket` record
 
-This library provides a single Integrant key, `:dev.gethop.object-storage/s3`, that returns an `AWSS3Bucket` record that can be used to perform `ObjectStorage` protocol operations on a given S3 bucket. For the `get-object-url` operation it generates a presigned URL that can be used to access objects in private buckets without holding any AWS credentials, with a limited life span. The key initialization expects the following keys:
+This library provides a single Integrant key, `:dev.gethop.object-storage/s3`, that returns an `AWSS3Bucket` record that can be used to perform `ObjectStorage` protocol operations on a given S3 bucket. For the `get-object-url` operation it generates a presigned URL that can be used to access objects in private buckets without holding any AWS credentials, with a limited life span. The key initialization accepts the following keys:
 
-* `:bucket-name`: The name of the bucket where we want to perform S3 operations.
-* `:presigned-url-lifespan`: Lifespan for the presigned URLs. It is specified in minutes (can use fractional values), and the default value is one hour.
+* `:bucket-name`: A string with the name of the bucket where we want to perform S3 operations. This key is mandatory.
+* `:presigned-url-lifespan`: A number with the lifespan for the presigned URLs. It is specified in minutes (fractional values can be used). This key is optional. If not provided, the default value is one hour.
+* `:endpoint`: A string with the URL of the S3 service endpoint the adapter will use. This key is optional. If not provided, the endpoint is determined by the AWS SDK (using its own standard criteria).
 
 Example configuration, with a presigned URL life span of 30 minutes:
 
 ``` edn
  :dev.gethop.object-storage/s3 {:bucket-name "hydrogen-test"
                                 :presigned-url-lifespan 30}
+```
+
+Another example configuration, with a presigned URL life span of 10 minutes, specifying a particular endpoint (for the S3-compatible OVH Object Storage service in this case):
+
+``` edn
+ :dev.gethop.object-storage/s3 {:bucket-name "ovh-object-store-bucket"
+                                :presigned-url-lifespan 10
+                                :endpoint "https://s3.rbx.io.cloud.ovh.net"}
 ```
 
 ### Performing S3 object operations

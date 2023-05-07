@@ -62,7 +62,9 @@
                     encryption
                     (assoc :encryption encryption))]
       ;; putObject either succeeds or throws an exception
-      (aws-s3/put-object request)
+      (if-not (:endpoint this)
+        (aws-s3/put-object request)
+        (aws-s3/put-object {:endpoint (:endpoint this)} request))
       {:success? true})
     (catch Exception e
       (ex->result e))))
@@ -72,12 +74,15 @@
   :ret  ::core/put-object-ret)
 
 (defn- copy-object*
-  "Copy object identified with `source-object-id` as key into new object identified with `destination-object-id`
-   in same assumed S3 Bucket
-   For now there is no support to copy objects between different Buckets.
-   Use `opts` to specify additional options. Right now there is no one supported.
-   For now encryption is only supported just as an effect of copying an already encrypted object. There is no support
-   to change the original encryption or metadata, for now."
+  "Copy `source-object-id` object into `destination-object-id` object.
+
+  For now there is no support to copy objects between different
+  Buckets. Also encryption is only supported just as a side-effect of
+  copying an already encrypted object. There is no support to change
+  the original encryption or metadata for now.
+
+  Use `opts` to specify additional options. Right now there is no one
+  supported."
   [this source-object-id destination-object-id opts]
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id source-object-id)
@@ -90,7 +95,9 @@
                    :source-key source-object-id
                    :destination-key destination-object-id}]
       ;; copyObject either succeeds or throws an exception
-      (aws-s3/copy-object request)
+      (if-not (:endpoint this)
+        (aws-s3/copy-object request)
+        (aws-s3/copy-object {:endpoint (:endpoint this)} request))
       {:success? true})
     (catch Exception e
       (ex->result e))))
@@ -112,7 +119,9 @@
           request (cond-> request
                     encryption
                     (assoc :encryption encryption))
-          result (aws-s3/get-object request)]
+          result (if-not (:endpoint this)
+                   (aws-s3/get-object request)
+                   (aws-s3/get-object {:endpoint (:endpoint this)} request))]
       ;; getObject can return null in some cases. Quoting
       ;; documentation "When specifying constraints in the request
       ;; object, the client needs to be prepared to handle this method
@@ -148,8 +157,8 @@
 
 (defn- get-object-url*
   "Generates a url allowing access to the object without the need to auth oneself.
-  Get the object with key `object-id` from S3 bucket referenced by
-  `this`, using `opts` options"
+  Uses the object with key `object-id` from S3 bucket referenced by
+  `this`, using `opts` options."
   [this object-id opts]
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id object-id)
@@ -169,11 +178,16 @@
                     (assoc :method (kw->http-method method))
 
                     filename
-                    (assoc :response-headers (attachment-header content-disposition content-type filename)))
-          presigned-url (.toString ^URL (aws-s3/generate-presigned-url request))]
+                    (assoc :response-headers (attachment-header content-disposition
+                                                                content-type
+                                                                filename)))
+          presigned-url (if-not (:endpoint this)
+                          (aws-s3/generate-presigned-url request)
+                          (aws-s3/generate-presigned-url {:endpoint (:endpoint this)}
+                                                         request))]
       ;; generatePresignedUrl either succeeds or throws an exception
       {:success? true
-       :object-url presigned-url})
+       :object-url (.toString ^URL presigned-url)})
     (catch Exception e
       (ex->result e))))
 
@@ -190,7 +204,11 @@
               (s/valid? ::core/delete-object-opts opts))]}
   (try
     ;; deleteObject either succeeds or throws an exception
-    (aws-s3/delete-object {:bucket-name (:bucket-name this), :key object-id})
+
+    (if-not (:endpoint this)
+      (aws-s3/delete-object {:bucket-name (:bucket-name this), :key object-id})
+      (aws-s3/delete-object {:endpoint (:endpoint this)}
+                            {:bucket-name (:bucket-name this) :key object-id}))
     {:success? true}
     (catch Exception e
       (ex->result e))))
@@ -209,18 +227,29 @@
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id parent-object-id))]}
   (loop [object-list []
-         partial-list (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
-                                               :prefix (str parent-object-id)})]
-    (let [object-list (concat object-list (:object-summaries partial-list))]
-      (if-not (:truncated? partial-list)
-        object-list
-        (recur object-list (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
-                                                    :prefix (str parent-object-id)
-                                                    :continuation-token (:next-continuation-token partial-list)}))))))
+         partial-list (if-not (:endpoint this)
+                        (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
+                                                 :prefix (str parent-object-id)})
+                        (aws-s3/list-objects-v2 {:endpoint (:endpoint this)}
+                                                {:bucket-name (:bucket-name this)
+                                                 :prefix (str parent-object-id)}))]
+    (if-not (:truncated? partial-list)
+      (concat object-list (:object-summaries partial-list))
+      (let [object-list (concat object-list (:object-summaries partial-list))
+            continuation-token (:next-continuation-token partial-list)]
+        (recur object-list
+               (if-not (:endpoint this)
+                 (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
+                                          :prefix (str parent-object-id)
+                                          :continuation-token continuation-token})
+                 (aws-s3/list-objects-v2 {:endpoint (:endpoint this)}
+                                         {:bucket-name (:bucket-name this)
+                                          :prefix (str parent-object-id)
+                                          :continuation-token continuation-token})))))))
 
 (defn- list-objects*
   "Lists all child objects for the given `parent-object-id` from S3
-  bucket reference by `this`."
+  bucket referenced by `this`."
   [this parent-object-id]
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id parent-object-id))]}
@@ -269,7 +298,9 @@
   (list-objects [this parent-object-id]
     (list-objects* this parent-object-id)))
 
-(defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan]
-                                                         :or {presigned-url-lifespan default-presigned-url-lifespan}}]
+(defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan endpoint]
+                                                         :or {presigned-url-lifespan default-presigned-url-lifespan
+                                                              endpoint nil}}]
   (map->AWSS3Bucket {:bucket-name bucket-name
+                     :endpoint endpoint
                      :presigned-url-lifespan presigned-url-lifespan}))

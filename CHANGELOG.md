@@ -4,6 +4,13 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Changed
+- Bump `integrant`, `amazonica` and AWS Java SDK dependencies.
+
+### Added
+- Add javax.xml.bind/jaxb-api dependency to avoid falling back to slower SDK implementations for certain operations.
+- Add S3 adapter `:endpoint` configuration parameter, to be able to use specific AWS S3 endpoints, or use alternative S3-compatible services (like the ones offered by various cloud providers).
+
 ## [0.6.10] - 2022-05-23
 ### Changed
 - Use the latest version of object-storage.core lib.
