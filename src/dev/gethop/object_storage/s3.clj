@@ -7,7 +7,8 @@
             [amazonica.core :refer [ex->map]]
             [clojure.spec.alpha :as s]
             [dev.gethop.object-storage.core :as core]
-            [integrant.core :as ig])
+            [integrant.core :as ig]
+            [lambdaisland.uri :refer [map->query-string query-map uri]])
   (:import [com.amazonaws.services.s3.model ResponseHeaderOverrides]
            [java.net URL]
            [java.util Date]))
@@ -161,6 +162,16 @@
         (.withContentType content-type)
         (.withContentDisposition cd))))
 
+(defn- presigned-url->public-url
+  [presigned-url]
+  (let [filtered-query-string (-> (query-map presigned-url {})
+                                  (select-keys [:response-content-disposition :response-content-type])
+                                  map->query-string)
+        public-uri (assoc (uri presigned-url)
+                          :fragment nil
+                          :query filtered-query-string)]
+    (str public-uri)))
+
 (defn- get-object-url*
   "Generates a url allowing access to the object without the need to auth oneself.
   Uses the object with key `object-id` from S3 bucket referenced by
@@ -176,6 +187,7 @@
           content-disposition (get opts :content-disposition :attachment)
           content-type (get opts :content-type "application/octet-stream")
           filename (:filename opts)
+          object-public-url? (:object-public-url? opts)
           request {:bucket-name (:bucket-name this)
                    :key object-id
                    :expiration expiration}
@@ -193,7 +205,9 @@
                                                          request))]
       ;; generatePresignedUrl either succeeds or throws an exception
       {:success? true
-       :object-url (.toString ^URL presigned-url)})
+       :object-url (if object-public-url?
+                     (presigned-url->public-url (.toString ^URL presigned-url))
+                     (.toString ^URL presigned-url))})
     (catch Exception e
       (ex->result e))))
 

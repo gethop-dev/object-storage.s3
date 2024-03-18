@@ -12,7 +12,8 @@
                  [com.amazonaws/aws-java-sdk-s3 "1.12.463"]
                  [javax.xml.bind/jaxb-api "2.3.1"]
                  [integrant "0.8.0"]
-                 [dev.gethop/object-storage.core "0.1.4"]]
+                 [dev.gethop/object-storage.core "0.1.5"]
+                 [lambdaisland/uri "1.19.155"]]
   :deploy-repositories [["snapshots" {:url "https://clojars.org/repo"
                                       :username :env/CLOJARS_USERNAME
                                       :password :env/CLOJARS_PASSWORD
