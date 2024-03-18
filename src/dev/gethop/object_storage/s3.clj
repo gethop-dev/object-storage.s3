@@ -60,7 +60,10 @@
                      (assoc-in [:metadata :content-length] (:object-size metadata)))
 
                     encryption
-                    (assoc :encryption encryption))]
+                    (assoc :encryption encryption)
+
+                    (:explicit-object-acl this)
+                    (assoc :access-control-list (:explicit-object-acl this)))]
       ;; putObject either succeeds or throws an exception
       (if-not (:endpoint this)
         (aws-s3/put-object request)
@@ -93,7 +96,10 @@
           request {:source-bucket-name bucket-name
                    :destination-bucket-name bucket-name
                    :source-key source-object-id
-                   :destination-key destination-object-id}]
+                   :destination-key destination-object-id}
+          request (cond-> request
+                    (:explicit-object-acl this)
+                    (assoc :access-control-list (:explicit-object-acl this)))]
       ;; copyObject either succeeds or throws an exception
       (if-not (:endpoint this)
         (aws-s3/copy-object request)
@@ -300,9 +306,12 @@
   (list-objects [this parent-object-id _opts]
     (list-objects* this parent-object-id)))
 
-(defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan endpoint]
+(defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan
+                                                                endpoint explicit-object-acl]
                                                          :or {presigned-url-lifespan default-presigned-url-lifespan
-                                                              endpoint nil}}]
+                                                              endpoint nil
+                                                              explicit-object-acl nil}}]
   (map->AWSS3Bucket {:bucket-name bucket-name
                      :endpoint endpoint
+                     :explicit-object-acl explicit-object-acl
                      :presigned-url-lifespan presigned-url-lifespan}))

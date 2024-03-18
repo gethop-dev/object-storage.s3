@@ -66,6 +66,24 @@
       (is (= (class s3-boundary)
              AWSS3Bucket)))))
 
+(deftest ^:integration put-get-public-file-test
+  (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
+        config-with-endpoint (-> config
+                                 (assoc :endpoint endpoint)
+                                 (assoc :explicit-object-acl {:grant-permission ["AllUsers" "Read"]}))]
+    (doseq [current-config [config config-with-endpoint]]
+      (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
+            file-key (str "integration-test-" (UUID/randomUUID))
+            put-result (core/put-object s3-boundary file-key (io/file test-file-1-path))]
+        (testing "testing put-object"
+          (is (:success? put-result)))
+        (testing "testing get-object"
+          (let [get-result (core/get-object s3-boundary file-key)]
+            (is (:success? get-result))
+            (is (= (digest/sha-256 (File. ^String test-file-1-path))
+                   (digest/sha-256 (:object get-result))))))
+        (core/delete-object s3-boundary file-key)))))
+
 (deftest ^:integration put-get-file-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
         config-with-endpoint (assoc config :endpoint endpoint)]
