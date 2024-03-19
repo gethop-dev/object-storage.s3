@@ -5,6 +5,11 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+## [0.7.1] - 2024-03-19
+### Added
+- Add option to upload files with specific ACL
+- Add the option to get public URL
+
 ## [0.7.0] - 2023-05-07
 ### Changed
 - Bump `integrant`, `amazonica` and AWS Java SDK dependencies.
@@ -67,7 +72,8 @@ file. This change log follows the conventions of
 ### Changed
 - Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality).
 
-[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.1
 [0.7.0]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.0
 [0.6.10]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.10
 [0.6.9]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.6.9

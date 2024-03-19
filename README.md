@@ -19,6 +19,7 @@ This library provides a single Integrant key, `:dev.gethop.object-storage/s3`, t
 * `:bucket-name`: A string with the name of the bucket where we want to perform S3 operations. This key is mandatory.
 * `:presigned-url-lifespan`: A number with the lifespan for the presigned URLs. It is specified in minutes (fractional values can be used). This key is optional. If not provided, the default value is one hour.
 * `:endpoint`: A string with the URL of the S3 service endpoint the adapter will use. This key is optional. If not provided, the endpoint is determined by the AWS SDK (using its own standard criteria).
+* `:explicit-object-acl`: A map with the ACL configuration the adapter will use to create all new objects. The key is optional. If not provided, objects will inherit the access configuration of the bucket.
 
 Example configuration, with a presigned URL life span of 30 minutes:
 
@@ -33,6 +34,15 @@ Another example configuration, with a presigned URL life span of 10 minutes, spe
  :dev.gethop.object-storage/s3 {:bucket-name "ovh-object-store-bucket"
                                 :presigned-url-lifespan 10
                                 :endpoint "https://s3.rbx.io.cloud.ovh.net"}
+```
+
+Another example configuration, with a presigned URL life span of 15 minutes, specifying a particular endpoint (for the S3-compatible OVH Object Storage service in this case) and with an ACL policy set to allow all users to `Read` the object:
+
+``` edn
+ :dev.gethop.object-storage/s3 {:bucket-name "ovh-object-store-bucket"
+                                :presigned-url-lifespan 15
+                                :endpoint "https://s3.rbx.io.cloud.ovh.net"
+                                :explicit-object-acl {:grant-permission ["AllUsers" "Read"]}}
 ```
 
 ### Performing S3 object operations
@@ -335,6 +345,7 @@ user> (object-storage/get-object-url s3-boundary "some-s3-key")
     - `:filename`: Specifies the filename that will be included in the "Content-Disposition" header for `:read` requests. It allows retrieving the object with a different name that the S3 key it was stored under.
     - `:content-type`: Specifies the value that will be included in the "Content-Type" header. Uses "application/octet-stream" as default if unspecified. Requires `filename` to be present in the opts.
     - `:content-disposition`: Specifies the value that will be included in the "Content-Disposition" header. Has to be either `:inline` or `:attachment`. Defaults to `:attachment`. Requires `filename` to be present in the opts.
+    - `:object-public-url?`: A boolean that specifies if the URL given by this function is going to be a public accessible one, instead of presigned. This only give us the url, the object should be accessible this way for this URL work. 
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. In addition, the presigned URL is only valid for GET requests.
