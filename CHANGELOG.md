@@ -4,6 +4,8 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Fixed
+- Keep the `:endpoint` and `:explicit-object-acl` in the AWSS3Bucket record. When we added those two options, we forgot to make them part as the record. The implementation worked because Clojure records double as Clojure maps when we assoc extra keys to them. But they should be proper record members.
 
 ## [0.7.1] - 2024-03-19
 ### Added

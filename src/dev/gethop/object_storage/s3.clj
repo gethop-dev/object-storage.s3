@@ -288,7 +288,7 @@
   :args ::core/list-objects-args
   :ret  ::core/list-objects-ret)
 
-(defrecord AWSS3Bucket [bucket-name presigned-url-lifespan]
+(defrecord AWSS3Bucket [bucket-name presigned-url-lifespan endpoint explicit-object-acl]
   core/ObjectStorage
   (put-object [this object-id object]
     (put-object* this object-id object {}))
