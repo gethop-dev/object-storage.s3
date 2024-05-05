@@ -6,6 +6,7 @@ file. This change log follows the conventions of
 ## [Unreleased]
 ### Fixed
 - Keep the `:endpoint` and `:explicit-object-acl` in the AWSS3Bucket record. When we added those two options, we forgot to make them part as the record. The implementation worked because Clojure records double as Clojure maps when we assoc extra keys to them. But they should be proper record members.
+- When doing `put-object` operations on an AWSS3Bucket record with both an `:endpoint` and an `explicit-object-acl`, the underlying library generated a warning about not being able to set the S3 bucket account owner for the ACL. It turns out the heuristics used by the underlying library to get the account owner don't work if using an explicit `:endpoint` that doesn't look like the canonical AWS S3 enpoints. Which happens when using S3 compatible APIs from other cloud vendors.
 
 ## [0.7.1] - 2024-03-19
 ### Added

@@ -53,6 +53,8 @@
           request {:bucket-name (:bucket-name this)
                    :key object-id
                    :file object}
+          endpoint? (:endpoint this)
+          endpoint {:endpoint (:endpoint this)}
           request (cond-> request
                     (instance? java.io.InputStream object)
                     (->
@@ -64,11 +66,13 @@
                     (assoc :encryption encryption)
 
                     (:explicit-object-acl this)
-                    (assoc :access-control-list (:explicit-object-acl this)))]
+                    (assoc :access-control-list
+                           (cond-> (:explicit-object-acl this)
+                             endpoint? (assoc :owner (aws-s3/get-s3account-owner endpoint)))))]
       ;; putObject either succeeds or throws an exception
-      (if-not (:endpoint this)
+      (if-not endpoint?
         (aws-s3/put-object request)
-        (aws-s3/put-object {:endpoint (:endpoint this)} request))
+        (aws-s3/put-object endpoint request))
       {:success? true})
     (catch Exception e
       (ex->result e))))
