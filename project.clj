@@ -5,7 +5,7 @@
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :min-lein-version "2.9.8"
   :dependencies [[org.clojure/clojure "1.10.0"]
-                 [amazonica "0.3.166" :exclusions [com.amazonaws/aws-java-sdk
+                 [amazonica "0.3.167" :exclusions [com.amazonaws/aws-java-sdk
                                                    com.amazonaws/amazon-kinesis-client
                                                    com.amazonaws/dynamodb-streams-kinesis-adapter]]
                  [com.amazonaws/aws-java-sdk-core "1.12.712"]

@@ -5,6 +5,9 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+### Fixed
+- Upgrade Amazonica to latest version, to make the S3 client side encryption respect specified endpoints. Otherwise it prevented the whole thing from working if we were using a S3-compatible service from another cloud provider.
+
 ## [0.7.2] - 2024-05-29
 ### Fixed
 - Keep the `:endpoint` and `:explicit-object-acl` in the AWSS3Bucket record. When we added those two options, we forgot to make them part as the record. The implementation worked because Clojure records double as Clojure maps when we assoc extra keys to them. But they should be proper record members.
