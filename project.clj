@@ -4,7 +4,7 @@
   :license {:name "Mozilla Public Licence 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :min-lein-version "2.9.8"
-  :dependencies [[org.clojure/clojure "1.10.0"]
+  :dependencies [[org.clojure/clojure "1.11.0"]
                  [amazonica "0.3.167" :exclusions [com.amazonaws/aws-java-sdk
                                                    com.amazonaws/amazon-kinesis-client
                                                    com.amazonaws/dynamodb-streams-kinesis-adapter]]
