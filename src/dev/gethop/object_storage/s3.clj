@@ -241,6 +241,42 @@
   :args ::core/delete-object-args
   :ret  ::core/delete-object-ret)
 
+(defn- delete-objects*
+  "Delete multiple objects from S3 bucket.
+   
+   Args:
+     this - The S3 adapter containing bucket configuration
+     object-keys - Collection of object keys to delete
+   
+   Returns:
+     Map with :success? key indicating if all objects were deleted successfully
+   
+   Example:
+     (delete-objects this [\"file1.pdf\" \"file2.png\" \"file3.txt\"])"
+  [this object-keys]
+  {:pre [(and (s/valid? ::AWSS3Bucket this)
+              (s/valid? ::core/delete-objects-args object-keys))]}
+  (if (empty? object-keys)
+    {:success? true
+     :deleted-count 0}
+    (try
+      (let [bucket-name (:bucket-name this)
+            delete-request {:bucket-name bucket-name
+                            :keys (cond->> object-keys
+                                    (not (vector? object-keys)) (into []))}
+            result (if-not (:endpoint this)
+                     (aws-s3/delete-objects delete-request)
+                     (aws-s3/delete-objects {:endpoint (:endpoint this)} delete-request))]
+        {:success? true
+         :deleted-count (count (:deleted-objects result))})
+      (catch Exception e
+        (ex->result e)))))
+
+(s/fdef delete-objects*
+  :args ::core/delete-objects-args
+  :ret  ::core/delete-objects-ret)
+
+
 (defn- build-object-list
   "Build a list of all child objects for the given `parent-object-id`
   from S3 bucket reference by `this`. As an S3 bucket can contain a
@@ -318,6 +354,14 @@
     (delete-object* this object-id {}))
   (delete-object [this object-id opts]
     (delete-object* this object-id opts))
+
+  (delete-objects [this object-keys]
+    (delete-objects* this object-keys))
+
+  (rename-object [_this _old-object-id _new-object-id]
+    {:success? false :error-details {:message "rename-object not implemented for S3"}})
+  (rename-object [_this _old-object-id _new-object-id _opts]
+    {:success? false :error-details {:message "rename-object not implemented for S3"}})
 
   (list-objects [this parent-object-id]
     (list-objects* this parent-object-id))

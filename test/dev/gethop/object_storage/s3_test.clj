@@ -15,8 +15,7 @@
            [java.io File]
            [java.net URL]
            [java.security KeyPairGenerator]
-           [java.security SecureRandom]
-           [java.util UUID]
+           [java.security SecureRandom] 
            [javax.crypto KeyGenerator]))
 
 (defn enable-instrumentation [f]
@@ -73,7 +72,7 @@
                                  (assoc :explicit-object-acl {:grant-permission ["AllUsers" "Read"]}))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
+            file-key (str "integration-test-" (random-uuid))
             put-result (core/put-object s3-boundary file-key (io/file test-file-1-path))]
         (testing "testing put-object"
           (is (:success? put-result)))
@@ -89,7 +88,7 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
+            file-key (str "integration-test-" (random-uuid))
             put-result (core/put-object s3-boundary file-key (io/file test-file-1-path))]
         (testing "testing put-object"
           (is (:success? put-result)))
@@ -105,7 +104,7 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
+            file-key (str "integration-test-" (random-uuid))
             bytes (.getBytes "Test message")
             stream (io/input-stream bytes)
             put-result (core/put-object s3-boundary
@@ -126,12 +125,12 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            src-key (str "integration-test-" (UUID/randomUUID))
+            src-key (str "integration-test-" (random-uuid))
             put-result (core/put-object s3-boundary src-key (io/file test-file-1-path))]
         (testing "testing put-object"
           (is (:success? put-result)))
         (testing "Successful copy and get object"
-          (let [dst-key (str "integration-test-" (UUID/randomUUID))
+          (let [dst-key (str "integration-test-" (random-uuid))
                 copy-result (core/copy-object s3-boundary src-key dst-key)]
             (testing "testing copy-object"
               (is (:success? copy-result)))
@@ -153,7 +152,7 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))]
+            file-key (str "integration-test-" (random-uuid))]
         (core/put-object s3-boundary file-key (io/file test-file-1-path))
         (core/delete-object s3-boundary file-key)
         (let [result (core/get-object s3-boundary file-key)]
@@ -161,17 +160,50 @@
             (is (not (:success? result)))
             (is (= (get-in result [:error-details :error-code])
                    "NoSuchKey"))))
-        (let [result (core/delete-object s3-boundary (str (UUID/randomUUID)))]
+        (let [result (core/delete-object s3-boundary (str (random-uuid)))]
           (testing "Amazonica is expected to allow deletion of a file that doesn't exist."
             (is (:success? result))))))))
+
+(deftest ^:integration delete-objects-test
+  (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
+        config-with-endpoint (assoc config :endpoint endpoint)]
+    (doseq [current-config [config config-with-endpoint]]
+      (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
+            file-key-1 (str "integration-test-" (random-uuid))
+            file-key-2 (str "integration-test-" (random-uuid))
+            file-key-3 (str "integration-test-" (random-uuid))]
+        ;; Put multiple objects
+        (core/put-object s3-boundary file-key-1 (io/file test-file-1-path))
+        (core/put-object s3-boundary file-key-2 (io/file test-file-1-path))
+        (core/put-object s3-boundary file-key-3 (io/file test-file-1-path))
+
+        (testing "delete-objects should delete multiple objects successfully"
+          (let [result (#'dev.gethop.object-storage.s3/delete-objects* s3-boundary [file-key-1 file-key-2])]
+            (is (:success? result))
+            (is (= 2 (:deleted-count result)))
+            ;; Verify objects are deleted
+            (is (not (:success? (core/get-object s3-boundary file-key-1))))
+            (is (not (:success? (core/get-object s3-boundary file-key-2))))))
+
+        (testing "delete-objects with endpoint configuration"
+          (let [result (#'dev.gethop.object-storage.s3/delete-objects* s3-boundary [file-key-3])]
+            (is (:success? result))
+            (is (= 1 (:deleted-count result)))
+            ;; Verify object is deleted
+            (is (not (:success? (core/get-object s3-boundary file-key-3))))))
+
+        (testing "delete-objects should handle empty collection"
+          (let [result (#'dev.gethop.object-storage.s3/delete-objects* s3-boundary [])]
+            (is (:success? result))
+            (is (= 0 (:deleted-count result)))))))))
 
 (deftest ^:integration list-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test/integration-test-" (UUID/randomUUID))
-            file-key-2 (str "integration-test-2/integration-test-" (UUID/randomUUID))]
+            file-key (str "integration-test/integration-test-" (random-uuid))
+            file-key-2 (str "integration-test-2/integration-test-" (random-uuid))]
         (core/put-object s3-boundary file-key (io/file test-file-1-path))
         (core/put-object s3-boundary file-key-2 (io/file test-file-1-path))
         (let [result (core/list-objects s3-boundary "integration-test/")]
@@ -195,7 +227,7 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
+            file-key (str "integration-test-" (random-uuid))
             f1 (File. ^String test-file-1-path)
             f2 (File. ^String test-file-2-path)]
         (testing "It should be possible to replace an object."
@@ -224,7 +256,7 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
+            file-key (str "integration-test-" (random-uuid))
             f (File. ^String test-file-1-path)]
         (core/put-object s3-boundary file-key f)
         (testing "testing default presigned url (defaults to :read operation)"
@@ -271,7 +303,7 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
+            file-key (str "integration-test-" (random-uuid))
             f (File. ^String test-file-1-path)]
         (testing "testing encrypted f put-get"
           (let [rsa-encrypt {:encryption {:key-pair rsa2048-key-pair}}
@@ -303,8 +335,8 @@
         config-with-endpoint (assoc config :endpoint endpoint)]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            src-key (str "integration-test-" (UUID/randomUUID))
-            dst-key (str "integration-test-" (UUID/randomUUID))
+            src-key (str "integration-test-" (random-uuid))
+            dst-key (str "integration-test-" (random-uuid))
             f (File. ^String test-file-1-path)
             aes-encrypt {:encryption {:secret-key aes256-key}}
             wrong-aes-encrypt {:encryption {:secret-key another-aes256-key}}]
