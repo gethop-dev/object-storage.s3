@@ -228,6 +228,35 @@
           (testing "Amazonica is expected to allow deletion of a file that doesn't exist."
             (is (:success? result))))))))
 
+(deftest ^:integration rename-get-file-test
+  (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
+        config-with-endpoint (assoc config :endpoint endpoint)]
+    (doseq [current-config [config config-with-endpoint]]
+      (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
+            src-key (str "integration-test-" (UUID/randomUUID))
+            dst-key (str "integration-test-" (UUID/randomUUID))
+            put-result (core/put-object s3-boundary src-key (io/file test-file-1-path))]
+        (testing "testing put-object"
+          (is (:success? put-result)))
+        (testing "Successful rename and get object"
+          (let [rename-result (core/rename-object s3-boundary src-key dst-key)]
+            (testing "testing rename-object"
+              (is (:success? rename-result)))
+            (testing "testing get-object on destination object"
+              (let [get-result (core/get-object s3-boundary dst-key)]
+                (is (:success? get-result))
+                (is (= (digest/sha-256 (File. ^String test-file-1-path))
+                       (digest/sha-256 (:object get-result))))))
+            (testing "testing get-object on source object"
+              (let [get-result (core/get-object s3-boundary src-key)]
+                (is (not (:success? get-result)))
+                (is (= 404 (-> get-result :error-details :status-code)))))))
+        (testing "Renaming file to itself also works (but does nothing)"
+          (let [src-key dst-key
+                rename-result (core/rename-object s3-boundary src-key dst-key)]
+            (is (:success? rename-result))))
+        (core/delete-object s3-boundary dst-key)))))
+
 (deftest ^:integration list-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
         config-with-endpoint (assoc config :endpoint endpoint)]

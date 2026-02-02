@@ -319,6 +319,26 @@ user> (object-storage/delete-object s3-boundary
   "Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: A44EBBA686B2CD4F; S3 Extended Request ID: KCfsfr1LqTHVNMZhhqme8sUQN8xb6vxTt8qZvjw5qzQB45N6GK+/AOHmepNru1eNq4N3yHw6htM=)"}}
 ```
 
+#### `(rename-object s3-boundary source-object-id destination-object-id)`
+
+* description: Renames an object from S3 into the same Bucket.
+* parameters:
+  - `s3-boundary`: An `AWSS3Bucket` record.
+  - `source-object-id`: The key of the object in the S3 bucket that we want to rename.
+  - `destination-object-id`: The key of the object in the S3 bucket that will be result of the renaming of object.
+* return value: a map with the following keys:
+  - `:success?`: boolean stating if the operation was successful or not.
+  - `:error-details`:  map with additional details on the problem encountered while trying to rename the object. This key is only present if `:success?` is `false`.
+
+Let's see an example for a successful invocation:
+
+```clj
+user> (object-storage/rename-object s3-boundary "some-existing-source-s3-key" "new-destination-s3-key")
+{:success? true}
+```
+
+Renaming a bucket key to itself using this method is a no-op, and always succeeds.
+
 #### `(get-object-url s3-boundary object-id)`
 
 * description: Gets a presigned URL that can be used to get the specified object without authentication. The URL lifespan is specified in the `AWSS3Bucket` record initialization.

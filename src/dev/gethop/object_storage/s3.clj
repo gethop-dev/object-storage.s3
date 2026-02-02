@@ -306,6 +306,27 @@
   :args ::core/delete-object-args
   :ret  ::core/delete-object-ret)
 
+(defn- rename-object*
+  "Rename the object `object-id` from S3 bucket referenced by `this`, to new-object-id`"
+  [this object-id new-object-id]
+  {:pre [(and (s/valid? ::AWSS3Bucket this)
+              (s/valid? ::core/object-id object-id)
+              (s/valid? ::core/object-id new-object-id))]}
+  ;; S3 does not have a rename operation. The recommended way it to
+  ;; copy the object key to the new key, and then delete the
+  ;; original key.
+  (if (= object-id new-object-id)
+    ;; Renaming object to itself. No need to do anything.
+    {:success? true}
+    (let [result (copy-object* this object-id new-object-id {})]
+      (if-not (:success? result)
+        result
+        (delete-object* this object-id {})))))
+
+(s/fdef rename-object*
+  :args ::core/rename-object-args
+  :ret  ::core/rename-object-ret)
+
 (defn- build-object-list
   "Build a list of all child objects for the given `parent-object-id`
   from S3 bucket reference by `this`. As an S3 bucket can contain a
@@ -383,6 +404,9 @@
     (delete-object* this object-id {}))
   (delete-object [this object-id opts]
     (delete-object* this object-id opts))
+
+  (rename-object [this object-id new-object-id]
+    (rename-object* this object-id new-object-id))
 
   (list-objects [this parent-object-id]
     (list-objects* this parent-object-id))
