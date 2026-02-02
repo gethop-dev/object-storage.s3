@@ -167,7 +167,10 @@
       ;; Amazon S3 receives the request."
       (if result
         {:success? true
-         :object (:input-stream result)}
+         :object (:input-stream result)
+         :metadata (-> (:object-metadata result)
+                       (set/rename-keys {:content-length :object-size})
+                       (select-keys supported-metadata))}
         {:success? false
          :error-details {:error-code "RequestConstraintsNotMet"}}))
     (catch Exception e
