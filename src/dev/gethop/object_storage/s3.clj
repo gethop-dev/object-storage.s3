@@ -18,6 +18,9 @@
   "Default presigned urls lifespan, expressed in minutes"
   60)
 
+(def ^:private supported-metadata
+  [:object-size :content-type :content-disposition :content-encoding])
+
 (defn- ex->result
   "Create a result map from `e` exception details"
   [e]

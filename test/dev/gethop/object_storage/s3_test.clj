@@ -19,25 +19,29 @@
            (java.util UUID)
            (javax.crypto KeyGenerator)))
 
-(defn enable-instrumentation [f]
+(defn- enable-instrumentation [f]
   (-> (stest/enumerate-namespace 'dev.gethop.object-storage.s3) stest/instrument)
   (f))
 
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def presigned-url-lifespan 1)
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def config {:bucket-name (System/getenv "TEST_OBJECT_STORAGE_S3_BUCKET")
              :presigned-url-lifespan presigned-url-lifespan})
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def test-file-1-path "test-file-1")
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def test-file-2-path "test-file-2")
 
-(defn setup []
+(defn- setup []
   (spit test-file-1-path {:hello :world})
   (spit test-file-2-path [:apples :bananas]))
 
-(defn teardown []
+(defn- teardown []
   (io/delete-file test-file-1-path)
   (io/delete-file test-file-2-path))
 
-(defn with-test-files [f]
+(defn- with-test-files [f]
   (setup)
   (f)
   (teardown))
@@ -45,16 +49,19 @@
 (use-fixtures :once enable-instrumentation)
 (use-fixtures :each with-test-files)
 
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def aes256-key
   (let [kg (KeyGenerator/getInstance "AES")]
     (.init kg 256 (SecureRandom.))
     (.generateKey kg)))
 
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def another-aes256-key
   (let [kg (KeyGenerator/getInstance "AES")]
     (.init kg 256 (SecureRandom.))
     (.generateKey kg)))
 
+#_{:clj-kondo/ignore [:missing-docstring]}
 (def rsa2048-key-pair
   (let [kg (KeyPairGenerator/getInstance "RSA")]
     (.initialize kg 2048 (SecureRandom.))
@@ -209,7 +216,7 @@
                    (digest/sha-256 (slurp (:object get-result)))))))
         (core/delete-object s3-boundary file-key)))))
 
-(defn http-request
+(defn- http-request
   [request]
   (let [request (assoc request :as :auto)
         {:keys [error status] :as response} @(http/request request)]
@@ -232,7 +239,7 @@
                 url (:object-url result)]
             (is (:success? result))
             (is (string? url))
-            (is (URL. url))
+            (is (URI. url))
             (is (= (digest/sha-256 f)
                    (digest/sha-256 (:body (http-request {:url url :method :get})))))))
         (testing "testing presigned url for :create method"
@@ -241,7 +248,7 @@
                 url (:object-url result)]
             (is (:success? result))
             (is (string? url))
-            (is (URL. url))
+            (is (URI. url))
             (is (not= :forbidden
                       (http-request {:url url
                                      :method :put
@@ -252,7 +259,7 @@
                 url (:object-url result)]
             (is (:success? result))
             (is (string? url))
-            (is (URL. url))
+            (is (URI. url))
             (is (= :forbidden
                    (http-request {:url url :method :get})))))
         (testing "testing :read presigned url with specific filename"
@@ -261,7 +268,7 @@
                 http-response (http-request {:url url :method :get})]
             (is (:success? result))
             (is (string? url))
-            (is (URL. url))
+            (is (URI. url))
             (is (= "attachment; filename=asdfasdf.docx"
                    (get-in http-response [:headers :content-disposition])))))
         (core/delete-object s3-boundary file-key)))))
