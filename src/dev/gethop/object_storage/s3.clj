@@ -5,7 +5,9 @@
 (ns dev.gethop.object-storage.s3
   (:require [amazonica.aws.s3 :as aws-s3]
             [amazonica.core :refer [ex->map]]
+            [clojure.set :as set]
             [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [dev.gethop.object-storage.core :as core]
             [integrant.core :as ig]
             [lambdaisland.uri :refer [map->query-string query-map uri]])
@@ -61,6 +63,22 @@
      :inline "inline")
    "; filename=" filename))
 
+(defn- object-key->filename
+  "Try to infer a filename from the object key.
+
+  The `/` character is the delimiter[1] separating the \"prefix\"es
+  and the \"object\" itself (which is the last component of the object
+  key, if it has any prefixes).
+
+  Things can become quiet complicated if object-key contains the `.`
+  or `..` prefixes, or consecutive `/` characters, of when the
+  object-key ends in a trailing `/`.  But sane object-keys shouldn't
+  contain use cases. So we apply a naive strategy.
+
+  [1] See https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html"
+  [object-key]
+  (peek (str/split object-key #"/+")))
+
 (defn- put-object*
   "Put `object` in the S3 bucket referenced by `this`, using `object-id` as the key.
   Use `opts` to specify additional put options.
@@ -68,7 +86,14 @@
   `object` can be either a File object or an InputStream. In the
   latter case, if you know the size of the content in the InputStream,
   add the `:metadata` key to the `opts` map. Its value should be a map
-  with a key called `:object-size`, with the size as its value."
+  with a key called `:object-size`, with the size as its value.
+
+  You can also specify the object content-type, and the desired
+  content-disposition and/or content-encoding for the later GET
+  operations that use the object URL directly (only makes sense for
+  public buckets). For that you can pass the `:content-type`,
+  `:content-disposition` and `:content-encoding` keys in the
+  `:metadata` map."
   [this object-id object opts]
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id object-id)
@@ -76,10 +101,20 @@
               (s/valid? ::core/put-object-opts opts))]}
   (try
     (let [metadata (:metadata opts)
+          content-headers (-> metadata
+                              (select-keys supported-metadata)
+                              (set/rename-keys {:object-size :content-length}))
+          content-headers (if (:content-disposition content-headers)
+                            (update content-headers :content-disposition
+                                    (fn [cd]
+                                      (let [filename (object-key->filename object-id)]
+                                        (content-disposition-header cd filename))))
+                            content-headers)
           encryption (:encryption opts)
           request {:bucket-name (:bucket-name this)
                    :key object-id
-                   :file object}
+                   :file object
+                   :metadata content-headers}
           endpoint? (:endpoint this)
           endpoint {:endpoint (:endpoint this)}
           request (cond-> request

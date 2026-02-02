@@ -128,6 +128,63 @@
                    (digest/sha-256 (slurp (:object get-result)))))))
         (core/delete-object s3-boundary file-key)))))
 
+(deftest ^:integration put-get-with-content-disposition-content-type-test
+  (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
+        config-with-endpoint (assoc config :endpoint endpoint)]
+    (doseq [current-config [config config-with-endpoint]]
+      (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
+            file-key-attachment (str "integration-test-" (UUID/randomUUID))
+            file-key-inline (str "integration-test-" (UUID/randomUUID))
+            bytes (.getBytes "Test message")
+            metadata {:object-size (count bytes)
+                      :content-type "image/png"}]
+        (testing "testing put object as attachment"
+          (let [metadata (assoc metadata :content-disposition :attachment)
+                stream (io/input-stream bytes)
+                put-result (core/put-object s3-boundary
+                                            file-key-attachment
+                                            stream
+                                            {:metadata metadata})]
+            (is (:success? put-result))))
+        (testing "testing get object stream with object metadata for attachment content disposition"
+          (let [get-result (core/get-object s3-boundary file-key-attachment)]
+            (is (:success? get-result))
+            (is (= (digest/sha-256 bytes)
+                   (digest/sha-256 (slurp (:object get-result)))))
+            ;; content-disposition is a keyword for the pub-object
+            ;; request (to indicate what kind of content-disposition
+            ;; we want), but it's the full content-disposition HTTP
+            ;; header in the get-object response. Thus, we need to
+            ;; compare those two things accordingly.
+            (is (= metadata
+                   (-> (:metadata get-result)
+                       (select-keys (keys (dissoc metadata :content-disposition))))))
+            (is (re-find #"^attachment;" (-> get-result :metadata :content-disposition)))))
+        (testing "testing put object as inline"
+          (let [metadata (assoc metadata :content-disposition :inline)
+                stream (io/input-stream bytes)
+                put-result (core/put-object s3-boundary
+                                            file-key-inline
+                                            stream
+                                            {:metadata metadata})]
+            (is (:success? put-result))))
+        (testing "testing get object stream with object metadata for inline content disposition"
+          (let [get-result (core/get-object s3-boundary file-key-inline)]
+            (is (:success? get-result))
+            (is (= (digest/sha-256 bytes)
+                   (digest/sha-256 (slurp (:object get-result)))))
+            ;; content-disposition is a keyword for the pub-object
+            ;; request (to indicate what kind of content-disposition
+            ;; we want), but it's the full content-disposition HTTP
+            ;; header in the get-object response. Thus, we need to
+            ;; compare those two things accordingly.
+            (is (= metadata
+                   (-> (:metadata get-result)
+                       (select-keys (keys (dissoc metadata :content-disposition))))))
+            (is (re-find #"^inline" (-> get-result :metadata :content-disposition)))))
+        (doseq [file-key [file-key-attachment file-key-inline]]
+          (core/delete-object s3-boundary file-key))))))
+
 (deftest ^:integration copy-get-file-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
         config-with-endpoint (assoc config :endpoint endpoint)]

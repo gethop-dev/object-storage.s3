@@ -111,10 +111,13 @@ user> (object-storage/put-object s3-boundary
 * parameters:
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The S3 key for the object that we want to upload.
-  - `object`: The file we want to upload. It can be either a `java.io.File`-compatible value or an `java.io.InputStream`-compatible value. In the latter case, if you know the size of the content in the InputStream, add the `:metadata` key to the `opts` map.
+  - `object`: The file we want to upload. It can be either a `java.io.File`-compatible value, or an `java.io.InputStream`-compatible value. In the latter case, if you know the size of the content in the InputStream, add the `:metadata` key to the `opts` map, setting the `object-size` key with the size of the InputStream content.
   - `opts: A map of options. Currently supported option keys are:
     - `metadata`: It is a map with the following supported keys:
       - `:object-size`: The size, in bytes, of the `object` passed in as an InputStream. If you don't specify it, the library needs to read the whole input into memory before uploading it. This could cause out of memory issues for large objects.
+      - `:content-type`: The value for the `Content-Type` header that will be used, unless overridden, when downloading the object.
+      - `:content-disposition`: A keyword wit the type of `Content-Disposition` header that will be used, unless overridden, when downloading the object. It can be eiher `:inline` or `attachment`.
+      - `:content-encoding`: The value for the `Content-Type` header that will be used, unless overridden, when downloading the object.
     - `:encryption`: It is a map with the following supported keys for client side encryption:
       - `:secret-key`: Any AmazonS3EncryptionClient supported symmetric key (e.g., AES256, AES128, etc.)
       - `:key-pair`:  Any AmazonS3EncryptionClient supported asymmetric key (e.g., RSA. EC, etc.)
@@ -134,6 +137,22 @@ user> (let [object-content (.getBytes "Test")
                                    {:metadata {:object-size object-size}}))
 {:success? true}
 ```
+
+A second example to show how to upload an object (again, as an mocked InputStream), and set the Content-Type and Content-Disposition headers for the retrieval of the object. In this case we want the retrieval operation to offer the end-user to save the content of the object as a file, instead of directly trying to open or diplay it. We set the Content-Type header to "image/png":
+
+
+```clj
+user> (let [object-content (.getBytes "Test")
+            object-size (count object-content)]
+        (object-storage/put-object s3-boundary
+                                   "some-s3-key"
+                                   (io/input-stream object-content)
+                                   {:metadata {:object-size object-size
+                                               :content-disposition :attachment
+                                               :content-type "image/png"}}))
+{:success? true}
+```
+
 
 The other use case is when we want to put an encrypted object in S3, doing encryption client side. In this example we use symmetric key encryption algorithm (AES256):
 
