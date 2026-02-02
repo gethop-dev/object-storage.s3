@@ -36,7 +36,23 @@
                         (instance? com.amazonaws.AmazonClientException e)
                         (assoc :error-type "Client"))})))
 
-(s/def ::AWSS3Bucket (s/keys :req-un [::bucket-name ::presigned-url-lifespan]))
+(s/def ::bucket-name (s/and string? #(> (count %) 0)))
+(s/def ::presigned-url-lifespan number?)
+(s/def ::endpoint (s/nilable (s/or :string-url (s/and string?
+                                                      (fn [s]
+                                                        (try
+                                                          (URI. s)
+                                                          (catch Throwable _
+                                                            false))))
+                                   :url #(instance? URL %))))
+(s/def ::grantee string?)
+(s/def ::permission string?)
+(s/def ::grantee-permission (s/tuple ::grantee ::permission))
+(s/def ::grant-permission ::grantee-permission)
+(s/def ::explicit-object-acl (s/nilable (s/keys :req-un [::grant-permission])))
+(s/def ::AWSS3Bucket (s/keys :req-un [::bucket-name ::presigned-url-lifespan]
+                             :opt-un [::endpoint ::explicit-object-acl]))
+
 
 (defn- put-object*
   "Put `object` in the S3 bucket referenced by `this`, using `object-id` as the key.
