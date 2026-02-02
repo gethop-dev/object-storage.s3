@@ -11,13 +11,13 @@
             [digest]
             [integrant.core :as ig]
             [org.httpkit.client :as http])
-  (:import [dev.gethop.object_storage.s3 AWSS3Bucket]
-           [java.io File]
-           [java.net URL]
-           [java.security KeyPairGenerator]
-           [java.security SecureRandom]
-           [java.util UUID]
-           [javax.crypto KeyGenerator]))
+  (:import (dev.gethop.object_storage.s3 AWSS3Bucket)
+           (java.io File)
+           (java.net URI)
+           (java.security KeyPairGenerator)
+           (java.security SecureRandom)
+           (java.util UUID)
+           (javax.crypto KeyGenerator)))
 
 (defn enable-instrumentation [f]
   (-> (stest/enumerate-namespace 'dev.gethop.object-storage.s3) stest/instrument)

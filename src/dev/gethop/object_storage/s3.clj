@@ -9,9 +9,10 @@
             [dev.gethop.object-storage.core :as core]
             [integrant.core :as ig]
             [lambdaisland.uri :refer [map->query-string query-map uri]])
-  (:import [com.amazonaws.services.s3.model ResponseHeaderOverrides]
-           [java.net URL]
-           [java.util Date]))
+  (:import (com.amazonaws.services.s3.model ResponseHeaderOverrides)
+           (java.net URL
+                     URI)
+           (java.util Date)))
 
 (def ^:const default-presigned-url-lifespan
   "Default presigned urls lifespan, expressed in minutes"
