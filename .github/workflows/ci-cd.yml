@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       LEIN_ROOT: "true"
       CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
@@ -30,13 +30,13 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Install Clojure Tools
         uses: DeLaGuardo/setup-clojure@12.5
         with:
-          lein: '2.9.8'
-          clj-kondo: '2024.03.13'
+          lein: '2.12.0'
+          clj-kondo: '2026.01.19'
 
       - name: Check formatting
         run: lein cljfmt check

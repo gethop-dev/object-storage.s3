@@ -5,6 +5,9 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+### Changed
+- Upgraded github Actions dependencies.
+
 ## [0.7.3] - 2024-06-26
 ### Fixed
 - Upgrade Amazonica to latest version, to make the S3 client side encryption respect specified endpoints. Otherwise it prevented the whole thing from working if we were using a S3-compatible service from another cloud provider.
