@@ -5,7 +5,15 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+### Added
+- Added new metadata options for `put-object` method: `:content-type`, `:content-disposition` and `:content-encoding` options.
+
 ### Changed
+- Upgraded Clojure version to 1.12.4 and spec.alpha to 0.5.238.
+- Upgraded Amazonica library to latest stable version.
+- Upgraded AWS Java SDK to latest stable version.
+- Upgraded to object-storage.core 0.1.7
+- Upgraded linting and testing dependencies to latest stable versions, and Java version to 21 (for tests).
 - Upgraded github Actions dependencies.
 
 ## [0.7.3] - 2024-06-26
