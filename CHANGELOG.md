@@ -15,6 +15,7 @@ file. This change log follows the conventions of
 - Upgraded to object-storage.core 0.1.7
 - Upgraded linting and testing dependencies to latest stable versions, and Java version to 21 (for tests).
 - Upgraded github Actions dependencies.
+- copy-object no longer returns failure when the source object key and the destination object key are the same value. It does nothing and returns success.
 
 ## [0.7.3] - 2024-06-26
 ### Fixed

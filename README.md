@@ -183,25 +183,14 @@ user> (object-storage/put-object s3-boundary
   - `:success?`: boolean stating if the operation was successful or not.
   - `:error-details`: a map with additional details on the problem encountered while trying to copy the object.
 
-Let's see an example. First for a successful invocation:
+Let's see an example for a successful invocation:
 
 ```clj
 user> (object-storage/copy-object s3-boundary "some-existing-source-s3-key" "new-destination-s3-key")
 {:success? true}
 ```
 
-Then for a failed one, requesting the same destination bucket key as the source:
-
-```clj
-user> (object-storage/copy-object s3-boundary "some-existing-source-s3-key" "some-existing-source-s3-key")
-{:success? false,
- :error-details {:error-code "InvalidRequest",
-                 :error-type "Client",
-                 :status-code 400,
-                 :request-id "example-req-id",
-                 :service-name "Amazon S3",
-                 :message "This copy request is illegal because it is trying to copy an object to itself without changing the object's metadata, storage class, website redirect location or encryption attributes. (Service: Amazon S3; Status Code: 400; Error Code: InvalidRequest; Request ID: example-req-id; S3 Extended Request ID: example-long-req-id"}}
-```
+Copying a bucket key to itself using this method is a no-op, and always succeeds.
 
 #### `(copy-object s3-boundary source-object-id destination-object-id opts)`
 

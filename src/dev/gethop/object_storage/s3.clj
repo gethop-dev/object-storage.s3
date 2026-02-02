@@ -158,22 +158,25 @@
               (s/valid? ::core/object-id source-object-id)
               (s/valid? ::core/object-id destination-object-id)
               (s/valid? ::core/copy-object-opts opts))]}
-  (try
-    (let [bucket-name (:bucket-name this)
-          request {:source-bucket-name bucket-name
-                   :destination-bucket-name bucket-name
-                   :source-key source-object-id
-                   :destination-key destination-object-id}
-          request (cond-> request
-                    (:explicit-object-acl this)
-                    (assoc :access-control-list (:explicit-object-acl this)))]
-      ;; copyObject either succeeds or throws an exception
-      (if-not (:endpoint this)
-        (aws-s3/copy-object request)
-        (aws-s3/copy-object {:endpoint (:endpoint this)} request))
-      {:success? true})
-    (catch Exception e
-      (ex->result e))))
+  (if (= source-object-id destination-object-id)
+    ;; Copying object to itself. No need to do anything.
+    {:success? true}
+    (try
+      (let [bucket-name (:bucket-name this)
+            request {:source-bucket-name bucket-name
+                     :destination-bucket-name bucket-name
+                     :source-key source-object-id
+                     :destination-key destination-object-id}
+            request (cond-> request
+                      (:explicit-object-acl this)
+                      (assoc :access-control-list (:explicit-object-acl this)))]
+        ;; copyObject either succeeds or throws an exception
+        (if-not (:endpoint this)
+          (aws-s3/copy-object request)
+          (aws-s3/copy-object {:endpoint (:endpoint this)} request))
+        {:success? true})
+      (catch Exception e
+        (ex->result e)))))
 
 (s/fdef copy-object*
   :args ::core/copy-object-args

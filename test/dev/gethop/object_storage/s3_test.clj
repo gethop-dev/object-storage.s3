@@ -205,11 +205,10 @@
                 (is (= (digest/sha-256 (File. ^String test-file-1-path))
                        (digest/sha-256 (:object get-result))))))
             (core/delete-object s3-boundary dst-key)))
-        (testing "Failing copy because of source object replace attempt"
+        (testing "Copying an object to itself succeeds (but does nothing)"
           (let [destination-key src-key
                 copy-result (core/copy-object s3-boundary src-key destination-key)]
-            (is (and (= false (:success? copy-result))
-                     (= 400 (get-in copy-result [:error-details :status-code]))))))
+            (is (:success? copy-result))))
         (core/delete-object s3-boundary src-key)))))
 
 (deftest ^:integration delete-test
