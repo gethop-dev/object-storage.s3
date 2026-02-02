@@ -53,6 +53,13 @@
 (s/def ::AWSS3Bucket (s/keys :req-un [::bucket-name ::presigned-url-lifespan]
                              :opt-un [::endpoint ::explicit-object-acl]))
 
+(defn- content-disposition-header
+  [content-disposition-type filename]
+  (str
+   (case content-disposition-type
+     :attachment "attachment"
+     :inline "inline")
+   "; filename=" filename))
 
 (defn- put-object*
   "Put `object` in the S3 bucket referenced by `this`, using `object-id` as the key.
@@ -178,10 +185,7 @@
 (defn- attachment-header
   [content-disposition content-type filename]
   (let [rho (ResponseHeaderOverrides.)
-        cd (str (case content-disposition
-                  :attachment "attachment"
-                  :inline "inline")
-                "; filename=" filename)]
+        cd (content-disposition-header content-disposition filename)]
     (-> rho
         (.withContentType content-type)
         (.withContentDisposition cd))))
