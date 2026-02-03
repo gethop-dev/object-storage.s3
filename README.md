@@ -54,7 +54,7 @@ user> (require '[dev.gethop.object-storage.core :as object-storage])
 nil
 ```
 
-Then we initiate the integrant key with an example configuration to get our S3 boundary `AWSSEBucket` record:
+Then we initiate the Integrant key with an example configuration to get our S3 boundary `AWSSEBucket` record:
 
 ```clj
 user> (def config {:bucket-name "hydrogen-test"
