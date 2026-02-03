@@ -413,12 +413,19 @@
   (list-objects [this parent-object-id _opts]
     (list-objects* this parent-object-id)))
 
-(defmethod ig/init-key :dev.gethop.object-storage/s3 [_ {:keys [bucket-name presigned-url-lifespan
-                                                                endpoint explicit-object-acl]
-                                                         :or {presigned-url-lifespan default-presigned-url-lifespan
-                                                              endpoint nil
-                                                              explicit-object-acl nil}}]
+(defn init-record
+  "Returns an AWSS3Bucket record with the provided `config`"
+  [{:keys [bucket-name presigned-url-lifespan
+           endpoint explicit-object-acl]
+    :or {presigned-url-lifespan default-presigned-url-lifespan
+         endpoint nil
+         explicit-object-acl nil}
+    :as _config}]
   (map->AWSS3Bucket {:bucket-name bucket-name
                      :endpoint endpoint
                      :explicit-object-acl explicit-object-acl
                      :presigned-url-lifespan presigned-url-lifespan}))
+
+(defmethod ig/init-key :dev.gethop.object-storage/s3
+  [_ config]
+  (init-record config))
