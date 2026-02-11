@@ -70,7 +70,7 @@
   and the \"object\" itself (which is the last component of the object
   key, if it has any prefixes).
 
-  Things can become quiet complicated if object-key contains the `.`
+  Things can become quite complicated if object-key contains the `.`
   or `..` prefixes, or consecutive `/` characters, of when the
   object-key ends in a trailing `/`.  But sane object-keys shouldn't
   contain use cases. So we apply a naive strategy.
