@@ -217,8 +217,8 @@
         {:success? true
          :object (:input-stream result)
          :metadata (-> (:object-metadata result)
-                       (set/rename-keys {:content-length :object-size})
-                       (select-keys supported-metadata))}
+                       (select-keys supported-metadata)
+                       (set/rename-keys {:content-length :object-size}))}
         {:success? false
          :error-details {:error-code "RequestConstraintsNotMet"}}))
     (catch Exception e

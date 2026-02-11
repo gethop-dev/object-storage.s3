@@ -12,6 +12,9 @@ file. This change log follows the conventions of
 ### Changed
 - Upgraded to object-storage.core 0.1.8
 
+### Fixed
+- Fixed the `:metadata` result key in the `get-object` method. The `:object-size` key was stripped by mistake.
+
 ## [0.7.4] - 2026-02-03
 ### Added
 - Added new metadata options for `put-object` method: `:content-type`, `:content-disposition` and `:content-encoding` options.
