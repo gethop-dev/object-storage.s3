@@ -5,6 +5,7 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-02-11
 ### Added
 - Added a new `init-record` function, to be able to use the library from projects that don't use Integrant.
 - Added new metadata option for `put-object` method (`:filename`), to specify the filename used in the Content-Disposition header when getting the object from S3.
@@ -108,7 +109,8 @@ file. This change log follows the conventions of
 ### Changed
 - Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality).
 
-[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.4...HEAD
+[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.5...HEAD
+[0.7.5]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.5
 [0.7.4]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.4
 [0.7.3]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.3
 [0.7.2]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.2
