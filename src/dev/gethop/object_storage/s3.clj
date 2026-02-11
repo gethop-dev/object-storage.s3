@@ -10,7 +10,7 @@
             [clojure.string :as str]
             [dev.gethop.object-storage.core :as core]
             [integrant.core :as ig]
-            [lambdaisland.uri :refer [map->query-string query-map uri]]
+            [lambdaisland.uri :refer [uri]]
             [ring.util.codec :as codec])
   (:import (com.amazonaws.services.s3.model ResponseHeaderOverrides)
            (java.net URL
@@ -243,13 +243,9 @@
 
 (defn- presigned-url->public-url
   [presigned-url]
-  (let [filtered-query-string (-> (query-map presigned-url {})
-                                  (select-keys [:response-content-disposition :response-content-type])
-                                  map->query-string)
-        public-uri (assoc (uri presigned-url)
-                          :fragment nil
-                          :query filtered-query-string)]
-    (str public-uri)))
+  (str (assoc (uri presigned-url)
+              :fragment nil
+              :query nil)))
 
 (defn- get-object-url*
   "Generates a url allowing access to the object without the need to auth oneself.

@@ -4,6 +4,9 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Fixed
+- Fix public URL generation. URLs for objects in public buckets cannot have query parameters or fragments. Some S3-compatible implementations ignore them, but AWS S3 implementation returns a 400 status code, and doesn't server the object.
+
 
 ## [0.7.5] - 2026-02-11
 ### Added
