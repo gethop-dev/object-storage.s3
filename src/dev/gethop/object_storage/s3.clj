@@ -10,7 +10,8 @@
             [clojure.string :as str]
             [dev.gethop.object-storage.core :as core]
             [integrant.core :as ig]
-            [lambdaisland.uri :refer [map->query-string query-map uri]])
+            [lambdaisland.uri :refer [map->query-string query-map uri]]
+            [ring.util.codec :as codec])
   (:import (com.amazonaws.services.s3.model ResponseHeaderOverrides)
            (java.net URL
                      URI)
@@ -68,7 +69,7 @@
    (case content-disposition-type
      :attachment "attachment"
      :inline "inline")
-   "; filename=" filename))
+   "; filename*=UTF-8''" (codec/percent-encode filename "UTF-8")))
 
 (defn- object-key->filename
   "Try to infer a filename from the object key.

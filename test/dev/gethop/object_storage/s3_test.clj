@@ -7,7 +7,7 @@
             [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
             [dev.gethop.object-storage.core :as core]
-            [dev.gethop.object-storage.s3]
+            [dev.gethop.object-storage.s3 :as s3]
             [digest]
             [integrant.core :as ig]
             [org.httpkit.client :as http])
@@ -354,7 +354,7 @@
             (is (:success? result))
             (is (string? url))
             (is (URI. url))
-            (is (= "attachment; filename=asdfasdf.docx"
+            (is (= (#'s3/content-disposition-header "asdfasdf.docx" :attachment)
                    (get-in http-response [:headers :content-disposition])))))
         (core/delete-object s3-boundary file-key)))))
 

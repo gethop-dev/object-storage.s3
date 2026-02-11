@@ -14,6 +14,7 @@
                  [javax.xml.bind/jaxb-api "2.3.1"]
                  [integrant/integrant "0.8.0"]
                  [dev.gethop/object-storage.core "0.1.8"]
+                 [ring/ring-codec "1.3.0"]
                  [lambdaisland/uri "1.19.155"]]
   :deploy-repositories [["snapshots" {:url "https://clojars.org/repo"
                                       :username :env/CLOJARS_USERNAME
