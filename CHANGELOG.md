@@ -4,9 +4,10 @@ file. This change log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.7.6] - 2026-02-11
 ### Fixed
 - Fix public URL generation. URLs for objects in public buckets cannot have query parameters or fragments. Some S3-compatible implementations ignore them, but AWS S3 implementation returns a 400 status code, and doesn't server the object.
-
 
 ## [0.7.5] - 2026-02-11
 ### Added
@@ -112,7 +113,8 @@ file. This change log follows the conventions of
 ### Changed
 - Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality).
 
-[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.5...HEAD
+[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.6...HEAD
+[0.7.6]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.6
 [0.7.5]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.5
 [0.7.4]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.4
 [0.7.3]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.3
