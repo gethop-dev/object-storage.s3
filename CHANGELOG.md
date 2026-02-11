@@ -11,6 +11,7 @@ file. This change log follows the conventions of
 ## [0.7.4] - 2026-02-03
 ### Added
 - Added new metadata options for `put-object` method: `:content-type`, `:content-disposition` and `:content-encoding` options.
+- Added `:metadata` key as a required value (that may be nil) in the map returned by `get-object`, when successfully executed.
 
 ### Changed
 - Upgraded Clojure version to 1.12.4 and spec.alpha to 0.5.238.
