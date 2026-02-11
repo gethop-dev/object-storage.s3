@@ -8,6 +8,9 @@ file. This change log follows the conventions of
 ### Added
 - Added a new `init-record` function, to be able to use the library from projects that don't use Integrant.
 
+### Changed
+- Upgraded to object-storage.core 0.1.8
+
 ## [0.7.4] - 2026-02-03
 ### Added
 - Added new metadata options for `put-object` method: `:content-type`, `:content-disposition` and `:content-encoding` options.
