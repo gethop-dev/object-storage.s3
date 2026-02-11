@@ -20,8 +20,15 @@
   "Default presigned urls lifespan, expressed in minutes"
   60)
 
+(def ^:private supported-content-headers
+  [:content-type
+   :content-disposition
+   :content-encoding
+   :content-length])
+
 (def ^:private supported-metadata
-  [:object-size :content-type :content-disposition :content-encoding])
+  (into supported-content-headers
+        [:filename]))
 
 (defn- ex->result
   "Create a result map from `e` exception details"
@@ -56,7 +63,7 @@
                              :opt-un [::endpoint ::explicit-object-acl]))
 
 (defn- content-disposition-header
-  [content-disposition-type filename]
+  [filename content-disposition-type]
   (str
    (case content-disposition-type
      :attachment "attachment"
@@ -101,15 +108,17 @@
               (s/valid? ::core/put-object-opts opts))]}
   (try
     (let [metadata (:metadata opts)
+          filename (or (:filename metadata)
+                       (object-key->filename object-id))
+          update-fn (fnil (partial content-disposition-header filename)
+                          ;; "inline" content-disposition is the default so
+                          ;; setting it when not passed in as an argument is
+                          ;; idempotent, but simplifies things.
+                          :inline)
           content-headers (-> metadata
                               (select-keys supported-metadata)
+                              (update :content-disposition update-fn)
                               (set/rename-keys {:object-size :content-length}))
-          content-headers (if (:content-disposition content-headers)
-                            (update content-headers :content-disposition
-                                    (fn [cd]
-                                      (let [filename (object-key->filename object-id)]
-                                        (content-disposition-header cd filename))))
-                            content-headers)
           encryption (:encryption opts)
           request {:bucket-name (:bucket-name this)
                    :key object-id
@@ -226,7 +235,7 @@
 (defn- attachment-header
   [content-disposition content-type filename]
   (let [rho (ResponseHeaderOverrides.)
-        cd (content-disposition-header content-disposition filename)]
+        cd (content-disposition-header filename content-disposition)]
     (-> rho
         (.withContentType content-type)
         (.withContentDisposition cd))))

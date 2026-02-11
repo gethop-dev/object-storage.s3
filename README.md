@@ -134,6 +134,7 @@ user> (object-storage/put-object s3-boundary
       - `:content-type`: The value for the `Content-Type` header that will be used, unless overridden, when downloading the object.
       - `:content-disposition`: A keyword wit the type of `Content-Disposition` header that will be used, unless overridden, when downloading the object. It can be eiher `:inline` or `attachment`.
       - `:content-encoding`: The value for the `Content-Type` header that will be used, unless overridden, when downloading the object.
+      - `:filename`: The value for the file name that will be used, unless overridden, when downloading the object.
     - `:encryption`: It is a map with the following supported keys for client side encryption:
       - `:secret-key`: Any AmazonS3EncryptionClient supported symmetric key (e.g., AES256, AES128, etc.)
       - `:key-pair`:  Any AmazonS3EncryptionClient supported asymmetric key (e.g., RSA. EC, etc.)

@@ -7,6 +7,7 @@ file. This change log follows the conventions of
 
 ### Added
 - Added a new `init-record` function, to be able to use the library from projects that don't use Integrant.
+- Added new metadata option for `put-object` method (`:filename`), to specify the filename used in the Content-Disposition header when getting the object from S3.
 
 ### Changed
 - Upgraded to object-storage.core 0.1.8
