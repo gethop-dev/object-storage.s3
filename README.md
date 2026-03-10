@@ -38,7 +38,7 @@ Another example configuration, with a presigned URL life span of 10 minutes, spe
                                 :endpoint "https://s3.rbx.io.cloud.ovh.net"}
 ```
 
-Another example configuration, with a presigned URL life span of 15 minutes, specifying a particular endpoint (for the S3-compatible OVH Object Storage service in this case) and with an ACL policy set to allow all users to `Read` the object:
+Another example configuration, with a presigned URL life span of 15 minutes, specifying a particular endpoint (for the S3-compatible OVH Object Storage service in this case) and with an ACL policy set to allow all users to `Read` all the objects created using this AWSS3bucket record:
 
 ``` edn
  :dev.gethop.object-storage/s3 {:bucket-name "ovh-object-store-bucket"
@@ -49,9 +49,9 @@ Another example configuration, with a presigned URL life span of 15 minutes, spe
 
 #### For projects not using Integrant
 
-The library can also be used without [Integrant][]. Just call the `dev.gethop.object-storage.azure-blob-storage/init-record` function with the same options you would use to initialize the Integrant key.
+The library can also be used without [Integrant][]. Just call the `dev.gethop.object-storage.s3/init-record` function with the same options you would use to initialize the Integrant key.
 
-An example configuration, with a presigned URL life span of 15 minutes, specifying a particular endpoint (for the S3-compatible OVH Object Storage service in this case) and with an ACL policy set to allow all users to `Read` the object:
+An example configuration, with a presigned URL life span of 15 minutes, specifying a particular endpoint (for the S3-compatible OVH Object Storage service in this case) and with an ACL policy set to allow all users to `Read` all the objects created using this AWSS3bucket record:
 
 ``` clojure
 (require '[dev.gethop.object-storage.s3 :as storage.s3])
@@ -112,13 +112,12 @@ user> (object-storage/put-object s3-boundary
                                  (io/file "some-existing-file"))
 {:success? false,
  :error-details
- {:error-code "AccessDenied",
-  :error-type "Client",
-  :status-code 403,
-  :request-id "07308DA9AF455078",
-  :service-name "Amazon S3",
-  :message
-  "Access Denied (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: 07308DA9AF455078; S3 Extended Request ID: gaJ8voOi5pO3HJ/yZt5mIAMUvpVycgekOyvihgc/XBGg8gehNkzMAiDbYtZEq0ckErXSGN3yrZI=)"}}
+ {:Code "AccessDenied",
+  :CodeAttrs {},
+  :Message "Access Denied.",
+  :MessageAttrs {},
+  :RequestId "tx76b9a82c14d84c0c802fd-0069ac4c72",
+ :RequestIdAttrs {}}}
 ```
 
 #### `(put-object s3-boundary object-id object opts)`
@@ -135,13 +134,9 @@ user> (object-storage/put-object s3-boundary
       - `:content-disposition`: A keyword wit the type of `Content-Disposition` header that will be used, unless overridden, when downloading the object. It can be eiher `:inline` or `attachment`.
       - `:content-encoding`: The value for the `Content-Type` header that will be used, unless overridden, when downloading the object.
       - `:filename`: The value for the file name that will be used, unless overridden, when downloading the object.
-    - `:encryption`: It is a map with the following supported keys for client side encryption:
-      - `:secret-key`: Any AmazonS3EncryptionClient supported symmetric key (e.g., AES256, AES128, etc.)
-      - `:key-pair`:  Any AmazonS3EncryptionClient supported asymmetric key (e.g., RSA. EC, etc.)
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
-
 
 Let's see an example. We want to upload an object that is an InputStream instead of a `File`. A typical use case for this scenario is that the object that we want to upload to S3 is a file that is being uploaded from an HTTP client. Ring adapters usually provides us with an InputStream, instead of a File. In this example we mock it by using a string and creating an InputStream from it:
 
@@ -155,7 +150,7 @@ user> (let [object-content (.getBytes "Test")
 {:success? true}
 ```
 
-A second example to show how to upload an object (again, as an mocked InputStream), and set the Content-Type and Content-Disposition headers for the retrieval of the object. In this case we want the retrieval operation to offer the end-user to save the content of the object as a file, instead of directly trying to open or diplay it. We set the Content-Type header to "image/png":
+A second example to show how to upload an object (again, as a mocked InputStream), and set the Content-Type and Content-Disposition headers for the retrieval of the object. In this case we want the retrieval operation to offer the end-user to save the content of the object as a file, instead of directly trying to open or diplay it. We set the Content-Type header to "image/png":
 
 
 ```clj
@@ -167,25 +162,6 @@ user> (let [object-content (.getBytes "Test")
                                    {:metadata {:object-size object-size
                                                :content-disposition :attachment
                                                :content-type "image/png"}}))
-{:success? true}
-```
-
-
-The other use case is when we want to put an encrypted object in S3, doing encryption client side. In this example we use symmetric key encryption algorithm (AES256):
-
-``` clj
-user> (import '[javax.crypto KeyGenerator]
-              '[java.security SecureRandom])
-java.security.SecureRandom
-user> (def aes256-key
-        (let [kg (KeyGenerator/getInstance "AES")]
-          (.init kg 256 (SecureRandom.))
-          (.generateKey kg)))
-#'user/aes256-key
-user> (object-storage/put-object s3-boundary
-                                 "some-s3-key"
-                                 (io/file "some-file")
-                                 {:encryption {:secret-key aes256-key}})
 {:success? true}
 ```
 
@@ -216,7 +192,7 @@ Copying a bucket key to itself using this method is a no-op, and always succeeds
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `source-object-id`: The key of the object in the S3 bucket that we want to copy.
   - `destination-object-id`: The key of the object in the S3 bucket as result of the copied object.
-  - `opts`: A map of options. Currently we do not support any yet.
+  - `opts`: A map of options. Currently we do not support any, but future version of the library may add some.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:error-details`: a map with additional details on the problem encountered while trying to copy the object.
@@ -264,44 +240,11 @@ user> (object-storage/get-object s3-boundary "some-non-existing-s3-key")
 * parameters:
   - `s3-boundary`: An `AWSS3Bucket` record.
   - `object-id`: The key of the object in the S3 bucket that we want to retrieve.
-  - `opts: A map of options. Currently supported option keys are:
-    - `:encryption`: It is a map with the following supported keys for client side encryption:
-      - `:secret-key`: Any AmazonS3EncryptionClient supported symmetric key (e.g., AES256, AES128, etc.)
-      - `:key-pair`:  Any AmazonS3EncryptionClient supported asymmetric key (e.g., RSA. EC, etc.)
+  - `opts`: A map of options. Currently we do not support any, but future version of the library may add some.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object`: If the operation was successful, this key contains an `InputStream`-compatible stream, on the desired object. Note that the `InputStream` returned by `get-object` should be closed (.e.g, via slurp) or the HTTP connection pool will be exhausted after several objects are retrieved.
   - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
-
-Let's see an example where we retrieve the encrypted object that we put in S3 earlier. We retrieve it from S3 (still encrypted) and decrypt it using client side encryption with the same symmetric key (AES256):
-
-```clj
-user> (object-storage/get-object s3-boundary
-                                 "some-s3-key"
-                                 {:encryption {:secret-key aes256-key}})
-{:success? true,
- :object
- #object[com.amazonaws.services.s3.model.S3ObjectInputStream 0x5e7fc790
- "com.amazonaws.services.s3.model.S3ObjectInputStream@5e7fc790"]}
-user>
-```
-
-Let's also see what happens if we use the wrong cryptographic key for client side decryption:
-
-```clj
-user> (def another-aes256-key
-        (let [kg (KeyGenerator/getInstance "AES")]
-          (.init kg 256 (SecureRandom.))
-          (.generateKey kg)))
-#'user/another-aes256-key
-user> (object-storage/get-object s3-boundary
-                                 "some-s3-key"
-                                 {:encryption {:secret-key another-aes256-key}})
-{:success? false,
- :error-details
- {:message "Unable to decrypt symmetric key from object metadata",
-  :error-type "Client"}}
-```
 
 #### `(delete-object s3-boundary object-id)`
 

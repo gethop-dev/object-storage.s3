@@ -6,11 +6,10 @@
   :min-lein-version "2.9.8"
   :dependencies [[org.clojure/clojure "1.12.4"]
                  [org.clojure/spec.alpha "0.5.238"]
-                 [amazonica "0.3.168" :exclusions [com.amazonaws/aws-java-sdk
-                                                   com.amazonaws/amazon-kinesis-client
-                                                   com.amazonaws/dynamodb-streams-kinesis-adapter]]
-                 [com.amazonaws/aws-java-sdk-core "1.12.797"]
-                 [com.amazonaws/aws-java-sdk-s3 "1.12.797"]
+                 [com.cognitect.aws/api "0.8.800"]
+                 [com.cognitect.aws/endpoints "871.2.42.4"]
+                 [com.cognitect.aws/s3 "871.2.41.20"]
+                 [dk.emcken/aws-simple-sign "2.3.2"]
                  [javax.xml.bind/jaxb-api "2.3.1"]
                  [integrant/integrant "0.8.0"]
                  [dev.gethop/object-storage.core "0.1.8"]

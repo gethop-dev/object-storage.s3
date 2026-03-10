@@ -5,6 +5,12 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+### Removed
+- **BREAKING CHANGE**: With the migration from Amazonica to aws-api + aws-simple-sign, some of the client-side features provided by the AWS Java SDK have been removed. In particular client-side encryption has been removed.
+
+### Changed
+- Migrated from Amazonico librarty to cognitect-labs aws-api library, plus aws-simple-sign library. Amazonica is still using the deprecated and unsupported AWS Java SDK v1.x. And doesn't seem to be upgrading to v2.x any time soon.
+
 ## [0.7.6] - 2026-02-11
 ### Fixed
 - Fix public URL generation. URLs for objects in public buckets cannot have query parameters or fragments. Some S3-compatible implementations ignore them, but AWS S3 implementation returns a 400 status code, and doesn't server the object.

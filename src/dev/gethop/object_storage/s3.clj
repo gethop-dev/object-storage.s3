@@ -3,17 +3,17 @@
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 (ns dev.gethop.object-storage.s3
-  (:require [amazonica.aws.s3 :as aws-s3]
-            [amazonica.core :refer [ex->map]]
+  (:require [aws-simple-sign.core :as aws-sign]
+            [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
+            [cognitect.aws.client.api :as aws]
             [dev.gethop.object-storage.core :as core]
             [integrant.core :as ig]
             [lambdaisland.uri :refer [uri]]
             [ring.util.codec :as codec])
-  (:import (com.amazonaws.services.s3.model ResponseHeaderOverrides)
-           (java.net URL
+  (:import (java.net URL
                      URI)
            (java.util Date)))
 
@@ -21,30 +21,36 @@
   "Default presigned urls lifespan, expressed in minutes"
   60)
 
-(def ^:private supported-content-headers
-  [:content-type
-   :content-disposition
-   :content-encoding
-   :content-length])
+(def ^:private metadata-keys->content-headers
+  {:content-type :ContentType
+   :content-disposition :ContentDisposition
+   :content-encoding :ContentEncoding
+   :content-length :ContentLength})
+
+(def ^:private metadata-keys
+  (into [] (keys metadata-keys->content-headers)))
 
 (def ^:private supported-metadata
-  (into supported-content-headers
+  (into metadata-keys
         [:filename]))
 
-(defn- ex->result
-  "Create a result map from `e` exception details"
-  [e]
+(def ^:private content-headers->metadata-keys
+  (set/map-invert metadata-keys->content-headers))
+
+(def ^:private content-headers
+  (into [] (keys content-headers->metadata-keys)))
+
+(defn- anomaly->result
+  "Create a result map from a Cognitect anomaly details"
+  [anomaly]
   (cond
-    (instance? com.amazonaws.AmazonServiceException e)
+    (:Error anomaly)
     {:success? false
-     :error-details (dissoc (ex->map e) :stack-trace)}
+     :error-details (:Error anomaly)}
 
     :else
-    (let [error-details {:message (.getMessage ^Exception e)}]
-      {:success? false
-       :error-details (cond-> error-details
-                        (instance? com.amazonaws.AmazonClientException e)
-                        (assoc :error-type "Client"))})))
+    {:success? false
+     :error-details anomaly}))
 
 (s/def ::bucket-name (s/and string? #(> (count %) 0)))
 (s/def ::presigned-url-lifespan number?)
@@ -55,13 +61,10 @@
                                                           (catch Throwable _
                                                             false))))
                                    :url #(instance? URL %))))
-(s/def ::grantee string?)
-(s/def ::permission string?)
-(s/def ::grantee-permission (s/tuple ::grantee ::permission))
-(s/def ::grant-permission ::grantee-permission)
-(s/def ::explicit-object-acl (s/nilable (s/keys :req-un [::grant-permission])))
+(s/def ::endpoint-region (s/nilable string?))
+(s/def ::explicit-object-acl (s/nilable string?))
 (s/def ::AWSS3Bucket (s/keys :req-un [::bucket-name ::presigned-url-lifespan]
-                             :opt-un [::endpoint ::explicit-object-acl]))
+                             :opt-un [::endpoint ::endpoint-region ::explicit-object-acl]))
 
 (defn- content-disposition-header
   [filename content-disposition-type]
@@ -107,47 +110,42 @@
               (s/valid? ::core/object-id object-id)
               (s/valid? ::core/object object)
               (s/valid? ::core/put-object-opts opts))]}
-  (try
-    (let [metadata (:metadata opts)
-          filename (or (:filename metadata)
-                       (object-key->filename object-id))
-          update-fn (fnil (partial content-disposition-header filename)
-                          ;; "inline" content-disposition is the default so
-                          ;; setting it when not passed in as an argument is
-                          ;; idempotent, but simplifies things.
-                          :inline)
-          content-headers (-> metadata
-                              (select-keys supported-metadata)
-                              (update :content-disposition update-fn)
-                              (set/rename-keys {:object-size :content-length}))
-          encryption (:encryption opts)
-          request {:bucket-name (:bucket-name this)
-                   :key object-id
-                   :file object
-                   :metadata content-headers}
-          endpoint? (:endpoint this)
-          endpoint {:endpoint (:endpoint this)}
-          request (cond-> request
-                    (instance? java.io.InputStream object)
-                    (->
-                     (dissoc :file)
-                     (assoc :input-stream object)
-                     (assoc-in [:metadata :content-length] (:object-size metadata)))
+  (let [metadata (:metadata opts)
+        filename (or (:filename metadata)
+                     (object-key->filename object-id))
+        update-fn (fnil (partial content-disposition-header filename)
+                        ;; "inline" content-disposition is the default so
+                        ;; setting it when not passed in as an argument is
+                        ;; idempotent, but simplifies things.
+                        :inline)
+        content-headers (-> metadata
+                            (select-keys supported-metadata)
+                            (update :content-disposition update-fn)
+                            (set/rename-keys {:object-size :content-length})
+                            (set/rename-keys metadata-keys->content-headers))
+        request (into content-headers {:Bucket (:bucket-name this)
+                                       :Key object-id})
+        request (cond-> request
+                  (instance? java.io.File object)
+                  (->
+                   (assoc :Body (io/input-stream object))
+                   (assoc :ContentLength (.length ^java.io.File object)))
 
-                    encryption
-                    (assoc :encryption encryption)
+                  (instance? java.io.InputStream object)
+                  (->
+                   (assoc :Body object)
+                   (cond->
+                    (:object-size metadata)
+                     (assoc :ContentLength (:object-size metadata))))
 
-                    (:explicit-object-acl this)
-                    (assoc :access-control-list
-                           (cond-> (:explicit-object-acl this)
-                             endpoint? (assoc :owner (aws-s3/get-s3account-owner endpoint)))))]
-      ;; putObject either succeeds or throws an exception
-      (if-not endpoint?
-        (aws-s3/put-object request)
-        (aws-s3/put-object endpoint request))
-      {:success? true})
-    (catch Exception e
-      (ex->result e))))
+                  (:explicit-object-acl this)
+                  (assoc :ACL (:explicit-object-acl this)))
+        response (aws/invoke (:client this)
+                             {:op :PutObject
+                              :request request})]
+    (if-not (:cognitect.anomalies/category response)
+      {:success? true}
+      (anomaly->result response))))
 
 (s/fdef put-object*
   :args ::core/put-object-args
@@ -157,11 +155,10 @@
   "Copy `source-object-id` object into `destination-object-id` object.
 
   For now there is no support to copy objects between different
-  Buckets. Also encryption is only supported just as a side-effect of
-  copying an already encrypted object. There is no support to change
-  the original encryption or metadata for now.
+  Buckets. There is also no support to change the original metadata
+  for now.
 
-  Use `opts` to specify additional options. Right now there is no one
+  Use `opts` to specify additional options. Right now there is none
   supported."
   [this source-object-id destination-object-id opts]
   {:pre [(and (s/valid? ::AWSS3Bucket this)
@@ -171,22 +168,19 @@
   (if (= source-object-id destination-object-id)
     ;; Copying object to itself. No need to do anything.
     {:success? true}
-    (try
-      (let [bucket-name (:bucket-name this)
-            request {:source-bucket-name bucket-name
-                     :destination-bucket-name bucket-name
-                     :source-key source-object-id
-                     :destination-key destination-object-id}
-            request (cond-> request
-                      (:explicit-object-acl this)
-                      (assoc :access-control-list (:explicit-object-acl this)))]
-        ;; copyObject either succeeds or throws an exception
-        (if-not (:endpoint this)
-          (aws-s3/copy-object request)
-          (aws-s3/copy-object {:endpoint (:endpoint this)} request))
-        {:success? true})
-      (catch Exception e
-        (ex->result e)))))
+    (let [bucket-name (:bucket-name this)
+          request {:CopySource (str bucket-name "/" source-object-id)
+                   :Bucket bucket-name
+                   :Key destination-object-id}
+          request (cond-> request
+                    (:explicit-object-acl this)
+                    (assoc :ACL (:explicit-object-acl this)))
+          response (aws/invoke (:client this)
+                               {:op :CopyObject
+                                :request request})]
+      (if-not (:cognitect.anomalies/category response)
+        {:success? true}
+        (anomaly->result response)))))
 
 (s/fdef copy-object*
   :args ::core/copy-object-args
@@ -198,31 +192,19 @@
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id object-id)
               (s/valid? ::core/get-object-opts opts))]}
-  (try
-    (let [encryption (:encryption opts)
-          request {:bucket-name (:bucket-name this)
-                   :key object-id}
-          request (cond-> request
-                    encryption
-                    (assoc :encryption encryption))
-          result (if-not (:endpoint this)
-                   (aws-s3/get-object request)
-                   (aws-s3/get-object {:endpoint (:endpoint this)} request))]
-      ;; getObject can return null in some cases. Quoting
-      ;; documentation "When specifying constraints in the request
-      ;; object, the client needs to be prepared to handle this method
-      ;; returning null if the provided constraints aren't met when
-      ;; Amazon S3 receives the request."
-      (if result
-        {:success? true
-         :object (:input-stream result)
-         :metadata (-> (:object-metadata result)
-                       (select-keys supported-metadata)
-                       (set/rename-keys {:content-length :object-size}))}
-        {:success? false
-         :error-details {:error-code "RequestConstraintsNotMet"}}))
-    (catch Exception e
-      (ex->result e))))
+  (let [request {:Bucket (:bucket-name this)
+                 :Key object-id}
+        response (aws/invoke (:client this)
+                             {:op :GetObject
+                              :request request})]
+    (if (:cognitect.anomalies/category response)
+      (anomaly->result response)
+      {:success? true
+       :object (:Body response)
+       :metadata (-> response
+                     (select-keys content-headers)
+                     (set/rename-keys content-headers->metadata-keys)
+                     (set/rename-keys {:content-length :object-size}))})))
 
 (s/fdef get-object*
   :args ::core/get-object-args
@@ -232,14 +214,6 @@
   [k]
   {:pre [(s/valid? ::core/method k)]}
   (k {:create "PUT" :read "GET", :update "PUT", :delete "DELETE"}))
-
-(defn- attachment-header
-  [content-disposition content-type filename]
-  (let [rho (ResponseHeaderOverrides.)
-        cd (content-disposition-header filename content-disposition)]
-    (-> rho
-        (.withContentType content-type)
-        (.withContentDisposition cd))))
 
 (defn- presigned-url->public-url
   [presigned-url]
@@ -255,36 +229,30 @@
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id object-id)
               (s/valid? ::core/get-object-url-opts opts))]}
-  (try
-    (let [expiration (Date. (+ (System/currentTimeMillis)
-                               (int (* (double (:presigned-url-lifespan this)) 60 1000))))
-          method (:method opts)
-          content-disposition (get opts :content-disposition :attachment)
-          content-type (get opts :content-type "application/octet-stream")
-          filename (:filename opts)
-          object-public-url? (:object-public-url? opts)
-          request {:bucket-name (:bucket-name this)
-                   :key object-id
-                   :expiration expiration}
-          request (cond-> request
-                    method
-                    (assoc :method (kw->http-method method))
+  (let [ref-time (Date.)
+        expires (int (* (double (:presigned-url-lifespan this)) 60))
+        method (:method opts)
+        content-disposition (get opts :content-disposition :attachment)
+        content-type (get opts :content-type "application/octet-stream")
+        filename (:filename opts)
+        object-public-url? (:object-public-url? opts)
+        opts (cond-> {:ref-time ref-time
+                      :expires (str expires)}
+               method
+               (assoc :method (kw->http-method method))
 
-                    filename
-                    (assoc :response-headers (attachment-header content-disposition
-                                                                content-type
-                                                                filename)))
-          presigned-url (if-not (:endpoint this)
-                          (aws-s3/generate-presigned-url request)
-                          (aws-s3/generate-presigned-url {:endpoint (:endpoint this)}
-                                                         request))]
-      ;; generatePresignedUrl either succeeds or throws an exception
-      {:success? true
-       :object-url (if object-public-url?
-                     (presigned-url->public-url (.toString ^URL presigned-url))
-                     (.toString ^URL presigned-url))})
-    (catch Exception e
-      (ex->result e))))
+               filename
+               (assoc :override-response-headers
+                      {:response-content-disposition (content-disposition-header filename content-disposition)
+                       :response-content-type content-type}))
+        presigned-url (aws-sign/generate-presigned-url (:client this)
+                                                       (:bucket-name this)
+                                                       object-id
+                                                       opts)]
+    {:success? true
+     :object-url (if object-public-url?
+                   (presigned-url->public-url presigned-url)
+                   presigned-url)}))
 
 (s/fdef get-object-url*
   :args ::core/get-object-url-args
@@ -297,16 +265,14 @@
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id object-id)
               (s/valid? ::core/delete-object-opts opts))]}
-  (try
-    ;; deleteObject either succeeds or throws an exception
-
-    (if-not (:endpoint this)
-      (aws-s3/delete-object {:bucket-name (:bucket-name this), :key object-id})
-      (aws-s3/delete-object {:endpoint (:endpoint this)}
-                            {:bucket-name (:bucket-name this) :key object-id}))
-    {:success? true}
-    (catch Exception e
-      (ex->result e))))
+  (let [request {:Bucket (:bucket-name this)
+                 :Key object-id}
+        response (aws/invoke (:client this)
+                             {:op :DeleteObject
+                              :request request})]
+    (if (:cognitect.anomalies/category response)
+      (anomaly->result response)
+      {:success? true})))
 
 (s/fdef delete-object*
   :args ::core/delete-object-args
@@ -343,25 +309,22 @@
   {:pre [(and (s/valid? ::AWSS3Bucket this)
               (s/valid? ::core/object-id parent-object-id))]}
   (loop [object-list []
-         partial-list (if-not (:endpoint this)
-                        (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
-                                                 :prefix (str parent-object-id)})
-                        (aws-s3/list-objects-v2 {:endpoint (:endpoint this)}
-                                                {:bucket-name (:bucket-name this)
-                                                 :prefix (str parent-object-id)}))]
-    (if-not (:truncated? partial-list)
-      (concat object-list (:object-summaries partial-list))
-      (let [object-list (concat object-list (:object-summaries partial-list))
-            continuation-token (:next-continuation-token partial-list)]
-        (recur object-list
-               (if-not (:endpoint this)
-                 (aws-s3/list-objects-v2 {:bucket-name (:bucket-name this)
-                                          :prefix (str parent-object-id)
-                                          :continuation-token continuation-token})
-                 (aws-s3/list-objects-v2 {:endpoint (:endpoint this)}
-                                         {:bucket-name (:bucket-name this)
-                                          :prefix (str parent-object-id)
-                                          :continuation-token continuation-token})))))))
+         partial-list (aws/invoke (:client this)
+                                  {:op :ListObjectsV2
+                                   :request {:Bucket (:bucket-name this)
+                                             :Prefix (str parent-object-id)}})]
+    (if (:cognitect.anomalies/category partial-list)
+      (throw (ex-info "ListObjectV2 error" partial-list))
+      (if-not (:IsTruncated partial-list)
+        (concat object-list (:Contents partial-list))
+        (let [object-list (concat object-list (:Contents partial-list))
+              continuation-token (:NextContinuationToken partial-list)]
+          (recur object-list
+                 (aws/invoke (:client this)
+                             {:op :ListObjectsV2
+                              :request {:Bucket (:bucket-name this)
+                                        :Prefix (str parent-object-id)
+                                        :ContinuationToken continuation-token}})))))))
 
 (defn- list-objects*
   "Lists all child objects for the given `parent-object-id` from S3
@@ -372,19 +335,20 @@
   (try
     (let [result (build-object-list this parent-object-id)]
       {:success? true
-       :objects (pmap (fn [{:keys [key last-modified size]}]
-                        {:object-id key
-                         :last-modified last-modified
-                         :size size})
-                      result)})
+       :objects (map (fn [{:keys [Key LastModified Size]}]
+                       {:object-id Key
+                        :last-modified LastModified
+                        :size Size})
+                     result)})
     (catch Exception e
-      (ex->result e))))
+      (anomaly->result (ex-data e)))))
 
 (s/fdef list-objects*
   :args ::core/list-objects-args
   :ret  ::core/list-objects-ret)
 
-(defrecord AWSS3Bucket [bucket-name presigned-url-lifespan endpoint explicit-object-acl]
+(defrecord AWSS3Bucket [client bucket-name bucket-owner
+                        presigned-url-lifespan explicit-object-acl]
   core/ObjectStorage
   (put-object [this object-id object]
     (put-object* this object-id object {}))
@@ -422,15 +386,34 @@
 (defn init-record
   "Returns an AWSS3Bucket record with the provided `config`"
   [{:keys [bucket-name presigned-url-lifespan
-           endpoint explicit-object-acl]
+           endpoint endpoint-region explicit-object-acl]
     :or {presigned-url-lifespan default-presigned-url-lifespan
          endpoint nil
+         endpoint-region nil
          explicit-object-acl nil}
     :as _config}]
-  (map->AWSS3Bucket {:bucket-name bucket-name
-                     :endpoint endpoint
-                     :explicit-object-acl explicit-object-acl
-                     :presigned-url-lifespan presigned-url-lifespan}))
+  (let [{:keys [scheme host port]} (uri endpoint)
+        client (aws/client (cond-> {:api :s3}
+                             ;; Even if we have a different region for the endpoint, the
+                             ;; default region provider in the library expects a valid
+                             ;; *AWS* region name. Fake it for now (but only if we are
+                             ;; using a custom endpoint), until we find a way to put the
+                             ;; right region here. See
+                             ;; https://github.com/cognitect-labs/aws-api/issues/150
+                             endpoint-region (assoc :region "eu-west-1")
+                             scheme (assoc-in [:endpoint-override :scheme] (keyword scheme))
+                             host (assoc-in [:endpoint-override :hostname] host)
+                             port (assoc-in [:endpoint-override :port] port)
+                             endpoint-region (assoc-in [:endpoint-override :region] endpoint-region)))
+        bucket-owner (when explicit-object-acl
+                       (let [result (aws/invoke client {:op :GetBucketAcl :request {:Bucket bucket-name}})]
+                         (when-not (:cognitect.anomalies/category result)
+                           (-> result (:Owner) (:ID)))))]
+    (map->AWSS3Bucket {:client client
+                       :bucket-name bucket-name
+                       :buclet-owner bucket-owner
+                       :presigned-url-lifespan presigned-url-lifespan
+                       :explicit-object-acl explicit-object-acl})))
 
 (defmethod ig/init-key :dev.gethop.object-storage/s3
   [_ config]

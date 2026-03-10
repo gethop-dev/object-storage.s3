@@ -14,10 +14,7 @@
   (:import (dev.gethop.object_storage.s3 AWSS3Bucket)
            (java.io File)
            (java.net URI)
-           (java.security KeyPairGenerator)
-           (java.security SecureRandom)
-           (java.util UUID)
-           (javax.crypto KeyGenerator)))
+           (java.util UUID)))
 
 (defn- enable-instrumentation [f]
   (-> (stest/enumerate-namespace 'dev.gethop.object-storage.s3) stest/instrument)
@@ -49,24 +46,6 @@
 (use-fixtures :once enable-instrumentation)
 (use-fixtures :each with-test-files)
 
-#_{:clj-kondo/ignore [:missing-docstring]}
-(def aes256-key
-  (let [kg (KeyGenerator/getInstance "AES")]
-    (.init kg 256 (SecureRandom.))
-    (.generateKey kg)))
-
-#_{:clj-kondo/ignore [:missing-docstring]}
-(def another-aes256-key
-  (let [kg (KeyGenerator/getInstance "AES")]
-    (.init kg 256 (SecureRandom.))
-    (.generateKey kg)))
-
-#_{:clj-kondo/ignore [:missing-docstring]}
-(def rsa2048-key-pair
-  (let [kg (KeyPairGenerator/getInstance "RSA")]
-    (.initialize kg 2048 (SecureRandom.))
-    (.generateKeyPair kg)))
-
 (deftest protocol-test
   (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 config)]
     (testing "ig/init-key returns the right type of record for the boundary"
@@ -77,7 +56,7 @@
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
         config-with-endpoint (-> config
                                  (assoc :endpoint endpoint)
-                                 (assoc :explicit-object-acl {:grant-permission ["AllUsers" "Read"]}))]
+                                 (assoc :explicit-object-acl "public-read"))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))
@@ -139,7 +118,9 @@
             metadata {:object-size (count bytes)
                       :content-type "image/png"}]
         (testing "testing put object as attachment"
-          (let [metadata (assoc metadata :content-disposition :attachment)
+          (let [metadata (assoc metadata
+                                :content-disposition :attachment
+                                :filename file-key-attachment)
                 stream (io/input-stream bytes)
                 put-result (core/put-object s3-boundary
                                             file-key-attachment
@@ -161,7 +142,9 @@
                        (select-keys (keys (dissoc metadata :content-disposition))))))
             (is (re-find #"^attachment;" (-> get-result :metadata :content-disposition)))))
         (testing "testing put object as inline"
-          (let [metadata (assoc metadata :content-disposition :inline)
+          (let [metadata (assoc metadata
+                                :content-disposition :inline
+                                :filename file-key-inline)
                 stream (io/input-stream bytes)
                 put-result (core/put-object s3-boundary
                                             file-key-inline
@@ -220,12 +203,12 @@
         (core/put-object s3-boundary file-key (io/file test-file-1-path))
         (core/delete-object s3-boundary file-key)
         (let [result (core/get-object s3-boundary file-key)]
-          (testing "Attempt to get an object that's been deleted should throw an exception."
+          (testing "Attempt to get an object that's been deleted should return an error"
             (is (not (:success? result)))
-            (is (= (get-in result [:error-details :error-code])
+            (is (= (get-in result [:error-details :Code])
                    "NoSuchKey"))))
         (let [result (core/delete-object s3-boundary (str (UUID/randomUUID)))]
-          (testing "Amazonica is expected to allow deletion of a file that doesn't exist."
+          (testing "Deleting an object that does not exist should work just fine"
             (is (:success? result))))))))
 
 (deftest ^:integration rename-get-file-test
@@ -250,7 +233,7 @@
             (testing "testing get-object on source object"
               (let [get-result (core/get-object s3-boundary src-key)]
                 (is (not (:success? get-result)))
-                (is (= 404 (-> get-result :error-details :status-code)))))))
+                (is (= "NoSuchKey" (-> get-result :error-details :Code)))))))
         (testing "Renaming file to itself also works (but does nothing)"
           (let [src-key dst-key
                 rename-result (core/rename-object s3-boundary src-key dst-key)]
@@ -339,7 +322,7 @@
                                      :method :put
                                      :body (slurp f)})))
             (core/delete-object s3-boundary new-file-key)))
-        (testing "testing :create presigned url throws exception when using :read method"
+        (testing "testing :create presigned url, fails when used with :read method"
           (let [result (core/get-object-url s3-boundary file-key {:method :create})
                 url (:object-url result)]
             (is (:success? result))
@@ -357,64 +340,3 @@
             (is (= (#'s3/content-disposition-header "asdfasdf.docx" :attachment)
                    (get-in http-response [:headers :content-disposition])))))
         (core/delete-object s3-boundary file-key)))))
-
-(deftest ^:integration encrypted-put-get-test
-  (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
-    (doseq [current-config [config config-with-endpoint]]
-      (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            file-key (str "integration-test-" (UUID/randomUUID))
-            f (File. ^String test-file-1-path)]
-        (testing "testing encrypted f put-get"
-          (let [rsa-encrypt {:encryption {:key-pair rsa2048-key-pair}}
-                aes-encrypt {:encryption {:secret-key aes256-key}}
-                wrong-aes-encrypt {:encryption {:secret-key another-aes256-key}}
-                put-rsa (core/put-object s3-boundary file-key f rsa-encrypt)
-                get-no-key (core/get-object s3-boundary file-key)
-                get-rsa (core/get-object s3-boundary file-key rsa-encrypt)
-                put-aes (core/put-object s3-boundary file-key f aes-encrypt)
-                get-aes (core/get-object s3-boundary file-key aes-encrypt)
-                get-wrong-aes (core/get-object s3-boundary file-key wrong-aes-encrypt)]
-            (is (:success? put-rsa))
-            (is (:success? put-aes))
-            (is (:success? get-no-key))
-            (is (:success? get-rsa))
-            (is (:success? get-aes))
-            (is (and (= false (:success? get-wrong-aes))
-                     (= "Client" (get-in get-wrong-aes [:error-details :error-type]))))
-            (is (not= (digest/sha-256 f)
-                      (digest/sha-256 (slurp (:object get-no-key)))))
-            (is (= (digest/sha-256 f)
-                   (digest/sha-256 (slurp (:object get-rsa)))))
-            (is (= (digest/sha-256 f)
-                   (digest/sha-256 (slurp (:object get-aes)))))))
-        (core/delete-object s3-boundary file-key)))))
-
-(deftest ^:integration encrypted-copy-get-test
-  (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
-    (doseq [current-config [config config-with-endpoint]]
-      (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
-            src-key (str "integration-test-" (UUID/randomUUID))
-            dst-key (str "integration-test-" (UUID/randomUUID))
-            f (File. ^String test-file-1-path)
-            aes-encrypt {:encryption {:secret-key aes256-key}}
-            wrong-aes-encrypt {:encryption {:secret-key another-aes256-key}}]
-        (testing "testing get encrypted object, copy it and get it back"
-          (let [put-result-aes (core/put-object s3-boundary src-key f aes-encrypt)
-                copy-result (core/copy-object s3-boundary src-key dst-key)
-                get-aes (core/get-object s3-boundary dst-key aes-encrypt)
-                get-no-key (core/get-object s3-boundary dst-key)
-                get-wrong-aes (core/get-object s3-boundary dst-key wrong-aes-encrypt)]
-            (is (:success? put-result-aes))
-            (is (:success? copy-result))
-            (is (:success? get-aes))
-            (is (:success? get-no-key))
-            (is (and (= false (:success? get-wrong-aes))
-                     (= "Client" (get-in get-wrong-aes [:error-details :error-type]))))
-            (is (not= (digest/sha-256 f)
-                      (digest/sha-256 (slurp (:object get-no-key)))))
-            (is (= (digest/sha-256 f)
-                   (digest/sha-256 (slurp (:object get-aes)))))))
-        (core/delete-object s3-boundary src-key)
-        (core/delete-object s3-boundary dst-key)))))
