@@ -5,6 +5,7 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-12
 ### Removed
 - **BREAKING CHANGE**: With the migration from Amazonica to aws-api + aws-simple-sign, some of the client-side features provided by the AWS Java SDK have been removed. In particular client-side encryption has been removed.
 
@@ -119,7 +120,8 @@ file. This change log follows the conventions of
 ### Changed
 - Use the protocol definition in [dev.gethop.object-storage.core](https://github.com/gethop-dev/object-storage.core) instead of a local definition (it doesn't affect the functionality).
 
-[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v0.7.6...HEAD
+[Unreleased]: https://github.com/gethop-dev/object-storage.s3/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v1.0.0
 [0.7.6]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.6
 [0.7.5]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.5
 [0.7.4]: https://github.com/gethop-dev/object-storage.s3/releases/tag/v0.7.4
