@@ -29,6 +29,8 @@
 (def test-file-1-path "test-file-1")
 #_{:clj-kondo/ignore [:missing-docstring]}
 (def test-file-2-path "test-file-2")
+#_{:clj-kondo/ignore [:missing-docstring]}
+(def canned-acl "public-read")
 
 (defn- setup []
   (spit test-file-1-path {:hello :world})
@@ -54,9 +56,12 @@
 
 (deftest ^:integration put-get-public-file-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (-> config
-                                 (assoc :endpoint endpoint)
-                                 (assoc :explicit-object-acl "public-read"))]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (-> config
+                                         (assoc :endpoint endpoint)
+                                         (assoc :explicit-object-acl canned-acl))
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))
@@ -72,7 +77,10 @@
 
 (deftest ^:integration put-get-file-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))
@@ -88,7 +96,10 @@
 
 (deftest ^:integration put-get-stream-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))
@@ -109,7 +120,10 @@
 
 (deftest ^:integration put-get-with-content-disposition-content-type-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key-attachment (str "integration-test-" (UUID/randomUUID))
@@ -170,7 +184,10 @@
 
 (deftest ^:integration copy-get-file-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             src-key (str "integration-test-" (UUID/randomUUID))
@@ -196,7 +213,10 @@
 
 (deftest ^:integration delete-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))]
@@ -213,7 +233,10 @@
 
 (deftest ^:integration rename-get-file-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             src-key (str "integration-test-" (UUID/randomUUID))
@@ -242,7 +265,10 @@
 
 (deftest ^:integration list-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test/integration-test-" (UUID/randomUUID))
@@ -267,7 +293,10 @@
 
 (deftest ^:integration replace-object-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))
@@ -296,7 +325,10 @@
 
 (deftest ^:integration presigned-url-test
   (let [endpoint (System/getenv "TEST_OBJECT_STORAGE_S3_ENDPOINT")
-        config-with-endpoint (assoc config :endpoint endpoint)]
+        endpoint-region (System/getenv "TEST_OBJECT_STORAGE_S3_REGION")
+        config-with-endpoint (cond-> (assoc config :endpoint endpoint)
+                               endpoint-region
+                               (assoc :endpoint-region endpoint-region))]
     (doseq [current-config [config config-with-endpoint]]
       (let [s3-boundary (ig/init-key :dev.gethop.object-storage/s3 current-config)
             file-key (str "integration-test-" (UUID/randomUUID))
