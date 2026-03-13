@@ -5,6 +5,7 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-13
 ### Fixed
 - Added missing new configuration option to README.md.
 
