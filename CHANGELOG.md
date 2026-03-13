@@ -5,6 +5,9 @@ file. This change log follows the conventions of
 
 ## [Unreleased]
 
+### Fixed
+- Added missing new configuration option to README.md.
+
 ## [1.0.0] - 2026-03-12
 ### Removed
 - **BREAKING CHANGE**: With the migration from Amazonica to aws-api + aws-simple-sign, some of the client-side features provided by the AWS Java SDK have been removed. In particular client-side encryption has been removed.

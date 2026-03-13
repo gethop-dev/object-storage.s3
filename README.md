@@ -21,6 +21,7 @@ This library provides a single Integrant key, `:dev.gethop.object-storage/s3`, t
 * `:bucket-name`: A string with the name of the bucket where we want to perform S3 operations. This key is mandatory.
 * `:presigned-url-lifespan`: A number with the lifespan for the presigned URLs. It is specified in minutes (fractional values can be used). This key is optional. If not provided, the default value is one hour.
 * `:endpoint`: A string with the URL of the S3 service endpoint the adapter will use. This key is optional. If not provided, the endpoint is determined by the AWS SDK (using its own standard criteria).
+* `:endpoint-region`: A string with the region of the bucket. You may need to specify the region if the `:endpoint` value is not a standard AWS S3 endpoint. For example, if you are using an S3-compatible service from a 3rd party provider like OVH, Backblaze, etc. If not provided, the endpoint is determined by the AWS SDK (using its own standard criteria).
 * `:explicit-object-acl`: A string with a [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl). This key is optional. If not provided, objects will inherit the access configuration of the bucket.
 
 Example configuration, with a presigned URL life span of 30 minutes, for Duct:
