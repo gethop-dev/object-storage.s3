@@ -347,8 +347,7 @@
   :args ::core/list-objects-args
   :ret  ::core/list-objects-ret)
 
-(defrecord AWSS3Bucket [client bucket-name bucket-owner
-                        presigned-url-lifespan explicit-object-acl]
+(defrecord AWSS3Bucket [client bucket-name presigned-url-lifespan explicit-object-acl]
   core/ObjectStorage
   (put-object [this object-id object]
     (put-object* this object-id object {}))
@@ -404,14 +403,9 @@
                              scheme (assoc-in [:endpoint-override :scheme] (keyword scheme))
                              host (assoc-in [:endpoint-override :hostname] host)
                              port (assoc-in [:endpoint-override :port] port)
-                             endpoint-region (assoc-in [:endpoint-override :region] endpoint-region)))
-        bucket-owner (when explicit-object-acl
-                       (let [result (aws/invoke client {:op :GetBucketAcl :request {:Bucket bucket-name}})]
-                         (when-not (:cognitect.anomalies/category result)
-                           (-> result (:Owner) (:ID)))))]
+                             endpoint-region (assoc-in [:endpoint-override :region] endpoint-region)))]
     (map->AWSS3Bucket {:client client
                        :bucket-name bucket-name
-                       :buclet-owner bucket-owner
                        :presigned-url-lifespan presigned-url-lifespan
                        :explicit-object-acl explicit-object-acl})))
 
