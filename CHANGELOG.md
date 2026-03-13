@@ -10,6 +10,7 @@ file. This change log follows the conventions of
 - **BREAKING CHANGE**: With the migration from Amazonica to aws-api + aws-simple-sign, some of the client-side features provided by the AWS Java SDK have been removed. In particular client-side encryption has been removed.
 
 ### Changed
+- **BREAKING CHANGE**: The structure of the `:explicit-object-acl` configuration option has changed. Now it is a string, that must contain a valid [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
 - Migrated from Amazonico librarty to cognitect-labs aws-api library, plus aws-simple-sign library. Amazonica is still using the deprecated and unsupported AWS Java SDK v1.x. And doesn't seem to be upgrading to v2.x any time soon.
 
 ## [0.7.6] - 2026-02-11
