@@ -331,10 +331,10 @@ user> (object-storage/get-object-url s3-boundary "some-s3-key")
       - `:read`:  Allows using a HTTP GET request.
       - `:update`: Allows using a HTTP PUT request.
       - `:delete`: Allows using a HTTP DELETE request.
-    - `:filename`: Specifies the filename that will be included in the "Content-Disposition" header for `:read` requests. It allows retrieving the object with a different name that the S3 key it was stored under.
-    - `:content-type`: Specifies the value that will be included in the "Content-Type" header. Uses "application/octet-stream" as default if unspecified. Requires `filename` to be present in the opts.
-    - `:content-disposition`: Specifies the value that will be included in the "Content-Disposition" header. Has to be either `:inline` or `:attachment`. Defaults to `:attachment`. Requires `filename` to be present in the opts.
     - `:object-public-url?`: A boolean that specifies if the URL returned by this function will be a public anonymous URL, without any signatures on it, and without any lifespan. That is, it will be valid for ever, as long as the object exists.
+    - `:filename`: Specifies the filename that will be included in the "Content-Disposition" header response for `:read` requests (it does not have any effect for the rest of the methods). It allows retrieving the object with a different name that the S3 key it was stored under.
+    - `:content-type`: Specifies the value that will be included in the "Content-Type" response header for `:read` requests (it does not have any effect for the rest of the methods). It allows retrieving the object with a different "Content-Type" than the one it was stored (created) under. Uses "application/octet-stream" as default if unspecified. Requires `:filename` to be present in the `opts` map.
+    - `:content-disposition`: Specifies the value that will be included in the "Content-Disposition" response header for `:read` requests (it does not have any effect for the rest of the methods). It allows retrieving the object with a different "Content-Disposition" than the one it was stored (created) under. It has to be either `:inline` or `:attachment`. Defaults to `:attachment`. Requires `:filename` to be present in the `opts` map.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If `:object-public-url?` was not set to `true`, and the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. If `:object-public-url?` was set to `true`, and the operation was successful, this key contains the public anonymous URL that is valid forever.
