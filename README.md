@@ -351,16 +351,17 @@ user> (object-storage/get-object-url s3-boundary
  "https://hydrogen-test.s3.eu-west-1.amazonaws.com/some-s3-key?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20191101T205923Z&X-Amz-SignedHeaders=host&X-Amz-Expires=1799&X-Amz-Credential=AKIAIIOB7F5TDVMDNXRQ%2F20191101%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Signature=f349b0068b1c746cda25d8b98af5ec8cf8f718010a9fc2ecc4a072ed9f05fa25"}
 ```
 
-Then for a `:read` operation where we want to set a specific filename for the object that we get from S3:
+Then, for a `:read` operation where we want to set a specific filename for the object that we get from S3, and its Content-Disposition:
 
 ``` clj
 user> (object-storage/get-object-url s3-boundary
                                      "some-s3-key"
                                      {:method :read
-                                      :filename "other-arbitrary-filename"})
+                                      :filename "other-arbitrary-filename"
+                                      :content-disposition :inline})
 {:success? true,
  :object-url
- "https://hydrogen-test.s3.eu-west-1.amazonaws.com/some-s3-key?response-content-disposition=attachment%3B%20filename%3Dother-arbitrary-filename&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20191101T210217Z&X-Amz-SignedHeaders=host&X-Amz-Expires=1799&X-Amz-Credential=AKIAIIOB7F5TDVMDNXRQ%2F20191101%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Signature=13f2bb4b32c5efb0cf4ce8c2aeba66eed1d483dd8d4ec2d93b03fefd94f0f525"}
+ "https://hydrogen-test.s3.eu-west-1.amazonaws.com/some-s3-key?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIIOB7F5TDVMDNXRQ%2F20260402%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260402T140203Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&response-content-disposition=inline%3B%20filename%2A%3DUTF-8%27%27%256F%2574%2568%2565%2572%252D%2561%2572%2562%2569%2574%2572%2561%2572%2579%252D%2566%2569%256C%2565%256E%2561%256D%2565&response-content-type=application%2Foctet-stream&X-Amz-Signature=ec42ff25f624fcbd783c3de368907ee6e7c6143595e341ef6cc5f143d71049ee"}
 ```
 
 #### `(list-objects s3-boundary parent-object-id)`
