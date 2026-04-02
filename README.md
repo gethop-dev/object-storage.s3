@@ -95,7 +95,7 @@ Once we have the protocol in place, we can use the `AWSS3Bucket` record to perfo
   - `object`: The file we want to upload (as a `java.io.File`-compatible value).
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
-  - `:error-details`: a map with additional details on the problem encountered while trying to upload the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to upload the object.
 
 Let's see an example. First for a successful invocation:
 
@@ -137,7 +137,7 @@ user> (object-storage/put-object s3-boundary
       - `:filename`: The value for the file name that will be used, unless overridden, when downloading the object.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
-  - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to retrieve the object.
 
 Let's see an example. We want to upload an object that is an InputStream instead of a `File`. A typical use case for this scenario is that the object that we want to upload to S3 is a file that is being uploaded from an HTTP client. Ring adapters usually provides us with an InputStream, instead of a File. In this example we mock it by using a string and creating an InputStream from it:
 
@@ -175,7 +175,7 @@ user> (let [object-content (.getBytes "Test")
   - `destination-object-id`: The key of the object in the S3 bucket as result of the copied object.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
-  - `:error-details`: a map with additional details on the problem encountered while trying to copy the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to copy the object.
 
 Let's see an example for a successful invocation:
 
@@ -196,7 +196,7 @@ Copying a bucket key to itself using this method is a no-op, and always succeeds
   - `opts`: A map of options. Currently we do not support any, but future version of the library may add some.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
-  - `:error-details`: a map with additional details on the problem encountered while trying to copy the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to copy the object.
 
 No need for examples for this case yet.
 
@@ -209,7 +209,7 @@ No need for examples for this case yet.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object`: If the operation was successful, this key contains an `InputStream`-compatible stream, on the desired object. Note that the `InputStream` returned by `get-object` should be closed (.e.g, via slurp) or the HTTP connection pool will be exhausted after several objects are retrieved.
-  - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to retrieve the object.
 
 Let's see an example. First for a successful invocation:
 
@@ -245,7 +245,7 @@ user> (object-storage/get-object s3-boundary "some-non-existing-s3-key")
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object`: If the operation was successful, this key contains an `InputStream`-compatible stream, on the desired object. Note that the `InputStream` returned by `get-object` should be closed (.e.g, via slurp) or the HTTP connection pool will be exhausted after several objects are retrieved.
-  - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to retrieve the object.
 
 #### `(delete-object s3-boundary object-id)`
 
@@ -255,7 +255,7 @@ user> (object-storage/get-object s3-boundary "some-non-existing-s3-key")
   - `object-id`: The key of the object in the S3 bucket that we want to delete.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
-  - `:error-details`: a map with additional details on the problem encountered while trying to retrieve the object.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to retrieve the object.
 
 Let's see an example. First for a successful invocation:
 
@@ -289,7 +289,7 @@ user> (object-storage/delete-object s3-boundary
   - `destination-object-id`: The key of the object in the S3 bucket that will be result of the renaming of object.
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
-  - `:error-details`:  map with additional details on the problem encountered while trying to rename the object. This key is only present if `:success?` is `false`.
+  - `:error-details`: If the operation was not successful, map with additional details on the problem encountered while trying to rename the object.
 
 Let's see an example for a successful invocation:
 
@@ -309,7 +309,7 @@ Renaming a bucket key to itself using this method is a no-op, and always succeed
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. In addition, the presigned URL is only valid for GET requests.
-  - `:error-details`: a map with additional details on the problem encountered while trying to create the presigned URL.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to create the presigned URL.
 
 Here is an example of a successful execution:
 
@@ -338,7 +338,7 @@ user> (object-storage/get-object-url s3-boundary "some-s3-key")
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:object-url`: If `:object-public-url?` was not set to `true`, and the operation was successful, this key contains a string with a presigned URL that can be used to get the specified object without authentication, but only within the configured lifespan. If `:object-public-url?` was set to `true`, and the operation was successful, this key contains the public anonymous URL that is valid forever.
-  - `:error-details`: a map with additional details on the problem encountered while trying to create the presigned URL.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying to create the presigned URL.
 
 Let's see an example. First a presigned URL for a `:create` operation:
 
@@ -372,7 +372,7 @@ user> (object-storage/get-object-url s3-boundary
 * return value: a map with the following keys:
   - `:success?`: boolean stating if the operation was successful or not.
   - `:objects`: If the operation was successful, this key contains a collection of maps.Each map represents a children object. Every object has 3 attributes: `object-id`, `last-modified` and `size`. Note that the collection returned will also contain the parent object since from the S3 perspective there is no folders concept.
-  - `:error-details`: a map with additional details on the problem encountered while trying retrieve the list of objects.
+  - `:error-details`: If the operation was not successful, a map with additional details on the problem encountered while trying retrieve the list of objects.
 
 Example:
 
