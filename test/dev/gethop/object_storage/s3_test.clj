@@ -345,14 +345,14 @@
         (testing "testing presigned url for :create method"
           (let [new-file-key (str file-key "-new")
                 result (core/get-object-url s3-boundary new-file-key {:method :create})
-                url (:object-url result)]
+                url (:object-url result)
+                http-response (http-request {:url url
+                                             :method :put
+                                             :body (slurp f)})]
             (is (:success? result))
             (is (string? url))
             (is (URI. url))
-            (is (not= :forbidden
-                      (http-request {:url url
-                                     :method :put
-                                     :body (slurp f)})))
+            (is (not= :forbidden http-response))
             (core/delete-object s3-boundary new-file-key)))
         (testing "testing :create presigned url, fails when used with :read method"
           (let [result (core/get-object-url s3-boundary file-key {:method :create})
@@ -362,13 +362,57 @@
             (is (URI. url))
             (is (= :forbidden
                    (http-request {:url url :method :get})))))
-        (testing "testing :read presigned url with specific filename"
-          (let [result (core/get-object-url s3-boundary file-key {:filename "asdfasdf.docx"})
+        (testing "testing presigned url for :create method, setting filename, content-type and content-disposition on upload"
+          (let [new-file-key (str file-key "-new")
+                result (core/get-object-url s3-boundary new-file-key
+                                            {:method :create})
+                url (:object-url result)
+                content-type "image/png"
+                content-disposition (#'s3/content-disposition-header (str new-file-key "-for-download")
+                                                                     :inline)
+                http-response (http-request {:url url
+                                             :headers {"Content-Type" content-type
+                                                       "Content-Disposition" content-disposition}
+                                             :method :put
+                                             :body (slurp f)})]
+            (is (:success? result))
+            (is (string? url))
+            (is (URI. url))
+            (is (not= :forbidden http-response))
+            (let [result (core/get-object-url s3-boundary new-file-key)
+                  url (:object-url result)
+                  http-response (http-request {:url url :method :get})]
+              (is (not= :forbidden http-response))
+              (is (= content-type (get-in http-response [:headers :content-type])))
+              (is (= content-disposition (get-in http-response [:headers :content-disposition]))))
+            (core/delete-object s3-boundary new-file-key)))
+        (testing "testing :read presigned url with specific filename, content-type and content-disposition"
+          (let [filename "asdfasdf.docx"
+                content-type "image/png"
+                content-disposition-type :inline
+                content-disposition (#'s3/content-disposition-header filename content-disposition-type)
+                result (core/get-object-url s3-boundary file-key {:filename filename
+                                                                  :content-type content-type
+                                                                  :content-disposition content-disposition-type})
                 url (:object-url result)
                 http-response (http-request {:url url :method :get})]
             (is (:success? result))
             (is (string? url))
             (is (URI. url))
-            (is (= (#'s3/content-disposition-header "asdfasdf.docx" :attachment)
-                   (get-in http-response [:headers :content-disposition])))))
+            (is (= content-type (get-in http-response [:headers :content-type])))
+            (is (= content-disposition (get-in http-response [:headers :content-disposition])))))
+        (testing "testing :read presigned url with specific filename, using non-ASCII charactes"
+          (let [filename "áéíóú☯🎂🎵.docx"
+                content-type "image/png"
+                content-disposition-type :attachment
+                content-disposition (#'s3/content-disposition-header filename content-disposition-type)
+                result (core/get-object-url s3-boundary file-key {:filename filename
+                                                                  :content-type content-type})
+                url (:object-url result)
+                http-response (http-request {:url url :method :get})]
+            (is (:success? result))
+            (is (string? url))
+            (is (URI. url))
+            (is (= content-type (get-in http-response [:headers :content-type])))
+            (is (= content-disposition (get-in http-response [:headers :content-disposition])))))
         (core/delete-object s3-boundary file-key)))))
